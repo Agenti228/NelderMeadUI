@@ -94,6 +94,11 @@ namespace Nelder_Mead_method
 
                 else if (argumentFlag < 1 && CheckSignOrNot(Expression[i], priorityCorrector, out Sign currentSign))
                 {
+                    if (currentSign.Value == '-' && (i == 0 || Expression[i - 1] == '(' || Expression[i - 1] == '['))
+                    {
+                        notParsedExpression += '0';
+                    }
+
                     notParsedExpression += "?";
 
                     if (signStackTop == -1 || signStack[signStackTop].Priority < currentSign.Priority)
@@ -141,7 +146,7 @@ namespace Nelder_Mead_method
 
             for (int i = 0; i < PostfixExpression.Length; i++)
             {
-                if (double.TryParse(PostfixExpression[i], out _))
+                if (double.TryParse(PostfixExpression[i], out calculatingExpression[i]))
                 {
                     continue;
                 }
