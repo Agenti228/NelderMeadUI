@@ -26,7 +26,9 @@ namespace SimplexUI
         //флаги
         private bool isMovingScreen = false;
 
-        myFunc expr;
+        private List<Point[]> simplexes = new List<Point[]>();
+
+        Nelder_Mead_method.Function expr;
 
 
         public Form1()
@@ -36,8 +38,7 @@ namespace SimplexUI
             funcColor = Color.Red;
             panelFunc.MouseWheel += PanelFunc_MouseWheel;
             backBrush = new SolidBrush(Color.White);
-            expr = new myFunc(textBoxFunc.Text);
-
+            expr = new Nelder_Mead_method.Function(textBoxFunc.Text);
         }
 
         #region XY methods
@@ -117,6 +118,27 @@ namespace SimplexUI
                 }
             }
         }
+        private void DrawSimplex(Graphics g)
+        {
+
+            PointF pnt = new System.Drawing.Point();
+            Pen p = new Pen(Color.DeepPink);
+            p.Width = 2;
+            if (expr != null && expr.isCorrect)
+            {
+                for (int i = 0; i < simplexes.Count; i++)
+                {
+                    for (int j = 1; j < simplexes[i].Length; j++)
+                    {
+                        PointF frstPnt = FuncToPanelXY(new PointF((float)simplexes[i][j -1][0], (float)simplexes[i][j - 1].Value));
+                        PointF scndPnt = FuncToPanelXY(new PointF((float)simplexes[i][j][0], (float)simplexes[i][j].Value));
+                        g.DrawLine(p, frstPnt, scndPnt);
+                        g.DrawRectangle(Pens.Blue, frstPnt.X - 2, frstPnt.Y - 2, 4, 4);
+                        g.DrawRectangle(Pens.Blue, scndPnt.X - 2, scndPnt.Y - 2, 4, 4);
+                    }
+                }
+            }
+        }
         #endregion
 
         #region Buttons
@@ -140,9 +162,10 @@ namespace SimplexUI
 
         private void buttonFunc_Click(object sender, EventArgs e)
         {
-            expr = new myFunc(textBoxFunc.Text);
+            expr = new Nelder_Mead_method.Function(textBoxFunc.Text);
             if (!expr.isCorrect) labelFuncError.Visible = true;
             else labelFuncError.Visible = false;
+            SimplexMethod();
             panelFunc.Invalidate();
         }
         #endregion
@@ -153,6 +176,7 @@ namespace SimplexUI
             if (panelFunc.BackgroundImage == null) e.Graphics.FillRectangle(backBrush, panelFunc.ClientRectangle);
             XYLinesInit(e.Graphics);
             DrawFunc(e.Graphics);
+            DrawSimplex(e.Graphics);
         }
 
         private void PanelFunc_MouseWheel(object sender, MouseEventArgs e)
@@ -207,5 +231,29 @@ namespace SimplexUI
             if (textBoxFunc.Text == "") labelFuncError.Visible = false;
         }
         #endregion
+        private void SimplexMethod()
+        {
+           
+            var settings = new Settings(1, 100);
+
+            simplexes.Clear();
+
+            double function(double[] point)
+            {
+                return expr.Calculate(point[0]);
+            }
+
+            double[] x0 = [10];
+            double[] x1 = [x0[0] + 2];
+
+            var simplex = new Simplex(settings, [x0, x1], function);
+
+            for (int r = 0; r < settings.MaxIterations; r++)
+            {
+                simplex.Iteration();
+                simplexes.Add(simplex.ClonePoints());
+                Console.WriteLine(simplex.GetBest);
+            }
+        }
     }
 }

@@ -33,7 +33,7 @@
 
         private readonly Settings _settings = new();
         private readonly Func<double[], double> _function;
-        private readonly Point[] _points;
+        public readonly Point[] _points;
         private readonly int _dimention;
 
         public Simplex(Settings settings, double[][] points, Func<double[], double> function)
@@ -142,6 +142,16 @@
             {
                 _points[i] = best + (_points[i] - best) * _settings.Reduction;
             }
+        }
+
+        public readonly Point[] ClonePoints()
+        {
+            Point[] points = new Point[_points.Length];
+            for (int i = 0; i < _points.Length; i++)
+            {
+                points[i] = (Point)_points[i].Clone();
+            }
+            return points;
         }
     }
 }

@@ -158,5 +158,11 @@
                 return Coordinates[index];
             }
         }
+
+        public PointF ToPointF()
+        {
+            if (Coordinates.Length > 2 || Coordinates.Length == 0) throw new ArgumentException();
+            return new PointF((float)Coordinates[0], (float)Coordinates[1]);
+        }
     }
 }
