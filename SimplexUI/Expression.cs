@@ -6,50 +6,49 @@ using System.Threading.Tasks;
 
 namespace Nelder_Mead_method
 {
-    struct Sign
+    struct Sign(char value, int priority)
     {
-        public char Value;
-        public int Priority;
-        public Sign(char value, int priority) { Value = value; Priority = priority; }
+        public char Value = value;
+        public int Priority = priority;
     }
 
     internal class Function
     {
-        private List<Sign> signsList { get; set; }
-        private Dictionary<char, Func<double, double, double>> binaryFunctions { get; set; }
-        private Dictionary<string, Func<double, double>> unaryFunctions { get; set; }
-        private string expression { get; set; }
-        public bool isCorrect { get; set; }
-        private string[] postfixExpression { get; set; }
-
+        private List<Sign> SignsList { get; set; }
+        private Dictionary<char, Func<double, double, double>> BinaryFunctions { get; set; }
+        private Dictionary<string, Func<double, double>> UnaryFunctions { get; set; }
+        private string Expression { get; set; }
+        public bool IsCorrect { get; set; }
+        private string[] PostfixExpression { get; set; }
+        
         public Function(string input)
         {
             Initialize();
-            expression = input;
+            Expression = input;
             PostfixParse();
 
         }
 
         private void Initialize()
         {
-            isCorrect = false;
-            signsList = new List<Sign>()
-            {
+            IsCorrect = false;
+            SignsList =
+            [
                 new Sign('+', 1),
                 new Sign('-', 1),
                 new Sign('*', 2),
                 new Sign('/', 2),
                 new Sign('(', 0),
                 new Sign(')', 0)
-            };
-            binaryFunctions = new Dictionary<char, Func<double, double, double>>
+            ];
+            BinaryFunctions = new Dictionary<char, Func<double, double, double>>
             {
                 { '+', (a, b) => a + b },
                 { '-', (a, b) => a - b },
                 { '*', (a, b) => a * b },
                 { '/', (a, b) => a / b }
             };
-            unaryFunctions = new Dictionary<string, Func<double, double>>
+            UnaryFunctions = new Dictionary<string, Func<double, double>>
             {
                 { "sin", a => Math.Sin(a) },
                 { "cos", a => Math.Cos(a) },
@@ -63,142 +62,155 @@ namespace Nelder_Mead_method
         private void PostfixParse()
         {
             int signStackTop = -1, argumentFlag = 0, priorityCorrector = 0;
-            List<Sign> signStack = new List<Sign>();
-            Sign currentSign;
+            List<Sign> signStack = [];
             string notParsedExpression = "";
 
-            expression = expression.Replace(" ", "");
-            expression = expression.ToLower();
+            Expression = Expression.Replace(" ", "");
+            Expression = Expression.ToLower();
 
-            for (int i = 0; i < expression.Length; i++)
+            for (int i = 0; i < Expression.Length; i++)
             {
-                if (expression[i] == '(') priorityCorrector += 10;
-                else if (expression[i] == ')') priorityCorrector -= 10;
-                else
+                if (Expression[i] == '(')
                 {
-                    if (expression[i] == '[') argumentFlag++;
-                    else if (expression[i] == ']') argumentFlag--;
-                    if (argumentFlag < 1 && CheckSignOrNot(expression[i], priorityCorrector, out currentSign))
+                    priorityCorrector += 10;
+                }
+
+                else if (Expression[i] == ')')
+                {
+                    priorityCorrector -= 10;
+                }
+
+                else if(Expression[i] == '[')
+                {
+                    argumentFlag++;
+                    notParsedExpression += Expression[i];
+                }
+
+                else if (Expression[i] == ']')
+                {
+                    argumentFlag--;
+                    notParsedExpression += Expression[i];
+                }
+
+                else if (argumentFlag < 1 && CheckSignOrNot(Expression[i], priorityCorrector, out Sign currentSign))
+                {
+                    notParsedExpression += "?";
+
+                    if (signStackTop == -1 || signStack[signStackTop].Priority < currentSign.Priority)
                     {
-                        notParsedExpression += "?";
-                        if (!(signStackTop == -1 || signStack[signStackTop].Priority < currentSign.Priority))
-                        {
-                            for (int j = signStackTop; j > -1; j--)
-                            {
-                                notParsedExpression += signStack[j].Value + "?";
-                                signStack.RemoveAt(j);
-                                signStackTop--;
-                            }
-                        }
                         signStack.Add(currentSign);
                         signStackTop++;
+                        continue;
                     }
-                    else notParsedExpression += expression[i];
+
+                    for (int j = signStackTop; j > -1; j--)
+                    {
+                        notParsedExpression += signStack[j].Value + "?";
+                        signStack.RemoveAt(j);
+                        signStackTop--;
+                    }
+
+                    signStack.Add(currentSign);
+                    signStackTop++;
+                }
+
+                else notParsedExpression += Expression[i];
+            }
+
+            if (signStackTop > -1)
+            {
+                for (int j = signStackTop; j > -1; j--)
+                {
+                    notParsedExpression += "?" + signStack[j].Value;
+                    signStack.RemoveAt(j);
+                    signStackTop--;
                 }
             }
-            if (signStackTop > -1) for (int j = signStackTop; j > -1; j--)
-            {
-                notParsedExpression += "?" + signStack[j].Value;
-                signStack.RemoveAt(j);
-                signStackTop--;
-            }
-            postfixExpression = notParsedExpression.Split('?');
-            if (argumentFlag == 0 && priorityCorrector == 0) isCorrect = CheckRelevance();
-            else isCorrect = false;
+
+            PostfixExpression = notParsedExpression.Split('?');
+            if (argumentFlag == 0 && priorityCorrector == 0) IsCorrect = TryCalculate(0, out _);
+            else IsCorrect = false;
         }
 
-        public double Calculate(double x)
+        public bool TryCalculate(double x, out double result)
         {
-            if (!isCorrect) return 0;
-
-            HashSet<string> validFunctions = new HashSet<string> { "sin", "cos", "tan", "log", "sqrt", "abs" };
-
+            HashSet<string> validFunctions = ["sin", "cos", "tan", "log", "sqrt", "abs"];
             int indexCorrector = 0;
-            Sign currentOperator;
-            double[] result = new double[postfixExpression.Length];
+            double[] calculatingExpression = new double[PostfixExpression.Length];
+            result = double.NaN;
 
-            for (int i = 0; i < postfixExpression.Length; i++)
+            for (int i = 0; i < PostfixExpression.Length; i++)
             {
-                if (double.TryParse(postfixExpression[i], out result[i + indexCorrector])) continue;
-                else if (postfixExpression[i].Length == 1 && CheckSignOrNot(postfixExpression[i][0], 0, out currentOperator))
-                {
-                    if (binaryFunctions.TryGetValue(currentOperator.Value, out var operation))
-                    {
-                        indexCorrector -= 2;
-                        result[i + indexCorrector] = operation(result[i + indexCorrector], result[i + indexCorrector + 1]);
-                    }
-                }
-                else if (postfixExpression[i].Length == 1 && char.IsLetter(postfixExpression[i][0])) result[i + indexCorrector] = x; //переменные!!!
-                else if (postfixExpression[i].Contains('[') &&
-                    validFunctions.Contains(postfixExpression[i].Substring(0, postfixExpression[i].IndexOf('['))))
-                {
-                    string arg = postfixExpression[i].Substring(postfixExpression[i].IndexOf('[') + 1,
-                       postfixExpression[i].LastIndexOf(']') - postfixExpression[i].IndexOf('[') - 1);
-                    Function argument = new Function(arg);
-                    result[i + indexCorrector] = argument.Calculate(x);
-                    if (unaryFunctions.TryGetValue(postfixExpression[i].Substring(0, postfixExpression[i].IndexOf('[')), out var operation))
-                    {
-                        result[i + indexCorrector] = operation(result[i + indexCorrector]);
-                    }
-                }
-                else return 0;
-            }
-            return result[0];
-        }
-
-        /// <summary>
-        /// postfixExpression[i].Length == 1 &&
-        /// </summary>
-        private bool CheckSignOrNot(char c, int priorityCorrector, out Sign op)
-        {
-
-            foreach (Sign s in signsList)
-            {
-                if (s.Value == c)
-                {
-                    op = new Sign(s.Value, s.Priority + priorityCorrector);
-                    return binaryFunctions.TryGetValue(op.Value, out _);
-                }
-            }
-            op = new Sign(signsList[0].Value, signsList[0].Priority + priorityCorrector);
-            return false;
-        }
-
-        private bool CheckRelevance()
-        {
-            HashSet<string> validFunctions = new HashSet<string> { "sin", "cos", "tan", "log", "sqrt", "abs" };
-
-            for (int i = 0; i < postfixExpression.Length; i++)
-            {
-                if (double.TryParse(postfixExpression[i], out _))
+                if (double.TryParse(PostfixExpression[i], out _))
                 {
                     continue;
                 }
 
-                if (postfixExpression[i].Length == 1)
+                if (CheckSignOrNot(PostfixExpression[i], 0, out Sign currentOperator))
                 {
-                    if (CheckSignOrNot(postfixExpression[i][0], 0, out _))
-                    {
-                        continue;
-                    }
-
-                    if (char.IsLetter(postfixExpression[i][0]))
-                    {
-                        continue;
-                    }
+                    BinaryFunctions.TryGetValue(currentOperator.Value, out var operation);
+                    indexCorrector -= 2;
+                    calculatingExpression[i + indexCorrector] = operation(calculatingExpression[i + indexCorrector], calculatingExpression[i + indexCorrector + 1]);
+                    continue;
                 }
 
-                if (postfixExpression[i].Contains('[') && validFunctions.Contains(postfixExpression[i][..postfixExpression[i].IndexOf('[')]))
+                if (PostfixExpression[i].Length == 1 && char.IsLetter(PostfixExpression[i][0]))
                 {
-                    string arg = postfixExpression[i].Substring(postfixExpression[i].IndexOf('[') + 1, postfixExpression[i].LastIndexOf(']') - postfixExpression[i].IndexOf('[') - 1);
+                    calculatingExpression[i + indexCorrector] = x;
+                    continue;
+                }
+
+                if (PostfixExpression[i].Contains('[') && validFunctions.Contains(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')]))
+                {
+                    string arg = PostfixExpression[i].Substring(PostfixExpression[i].IndexOf('[') + 1, PostfixExpression[i].LastIndexOf(']') - PostfixExpression[i].IndexOf('[') - 1);
                     Function argument = new Function(arg);
-                    if (unaryFunctions.TryGetValue(postfixExpression[i][..postfixExpression[i].IndexOf('[')], out _) && argument.isCorrect)
+                    if (UnaryFunctions.TryGetValue(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')], out var operation) && argument.TryCalculate(x, out calculatingExpression[i + indexCorrector]))
+                    {
+                        calculatingExpression[i + indexCorrector] = operation(calculatingExpression[i + indexCorrector]);
                         continue;
+                    }
+                    return false;
                 }
 
-                else return false;
+                return false;
             }
+            result = calculatingExpression[0];
             return true;
+        }
+
+        private bool CheckSignOrNot(string unit, int priorityCorrector, out Sign operation)
+        {
+            operation = new Sign(SignsList[0].Value, SignsList[0].Priority + priorityCorrector);
+
+            if (unit.Length == 1)
+            {
+                foreach (Sign s in SignsList)
+                {
+                    if (s.Value == unit[0])
+                    {
+                        operation = new Sign(s.Value, s.Priority + priorityCorrector);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool CheckSignOrNot(char unit, int priorityCorrector, out Sign operation)
+        {
+            operation = new Sign(SignsList[0].Value, SignsList[0].Priority + priorityCorrector);
+
+            foreach (Sign s in SignsList)
+            {
+                if (s.Value == unit)
+                {
+                    operation = new Sign(s.Value, s.Priority + priorityCorrector);
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

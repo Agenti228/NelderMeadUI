@@ -29,23 +29,38 @@
         private void InitializeComponent()
         {
             panelFunc = new DbBufPanel();
+            buttonReturnSize = new Button();
             labelFunc = new Label();
             textBoxFunc = new TextBox();
             labelFuncError = new Label();
             buttonFunc = new Button();
+            listBoxIterations = new ListBox();
+            labelIterations = new Label();
+            panelFunc.SuspendLayout();
             SuspendLayout();
             // 
             // panelFunc
             // 
+            panelFunc.Controls.Add(buttonReturnSize);
             panelFunc.Location = new System.Drawing.Point(404, -1);
             panelFunc.Name = "panelFunc";
             panelFunc.Size = new Size(396, 261);
             panelFunc.TabIndex = 0;
             panelFunc.Paint += PanelFunc_Paint;
-            panelFunc.MouseClick += panelFunc_MouseClick;
-            panelFunc.MouseDown += panelFunc_MouseDown;
-            panelFunc.MouseMove += panelFunc_MouseMove;
-            panelFunc.MouseUp += panelFunc_MouseUp;
+            panelFunc.MouseClick += PanelFunc_MouseClick;
+            panelFunc.MouseDown += PanelFunc_MouseDown;
+            panelFunc.MouseMove += PanelFunc_MouseMove;
+            panelFunc.MouseUp += PanelFunc_MouseUp;
+            // 
+            // buttonReturnSize
+            // 
+            buttonReturnSize.Location = new System.Drawing.Point(353, 226);
+            buttonReturnSize.Name = "buttonReturnSize";
+            buttonReturnSize.Size = new Size(31, 23);
+            buttonReturnSize.TabIndex = 0;
+            buttonReturnSize.Text = "1:1";
+            buttonReturnSize.UseVisualStyleBackColor = true;
+            buttonReturnSize.Click += ButtonReturnSize_Click;
             // 
             // labelFunc
             // 
@@ -62,7 +77,7 @@
             textBoxFunc.Name = "textBoxFunc";
             textBoxFunc.Size = new Size(262, 23);
             textBoxFunc.TabIndex = 2;
-            textBoxFunc.TextChanged += textBoxFunc_TextChanged;
+            textBoxFunc.TextChanged += TextBoxFunc_TextChanged;
             // 
             // labelFuncError
             // 
@@ -82,13 +97,33 @@
             buttonFunc.TabIndex = 5;
             buttonFunc.Text = "Calculate";
             buttonFunc.UseVisualStyleBackColor = true;
-            buttonFunc.Click += buttonFunc_Click;
+            buttonFunc.Click += ButtonFunc_Click;
+            // 
+            // listBoxIterations
+            // 
+            listBoxIterations.FormattingEnabled = true;
+            listBoxIterations.ItemHeight = 15;
+            listBoxIterations.Location = new System.Drawing.Point(12, 109);
+            listBoxIterations.Name = "listBoxIterations";
+            listBoxIterations.Size = new Size(386, 139);
+            listBoxIterations.TabIndex = 6;
+            // 
+            // labelIterations
+            // 
+            labelIterations.AutoSize = true;
+            labelIterations.Location = new System.Drawing.Point(12, 91);
+            labelIterations.Name = "labelIterations";
+            labelIterations.Size = new Size(59, 15);
+            labelIterations.TabIndex = 7;
+            labelIterations.Text = "Iterations:";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 260);
+            Controls.Add(labelIterations);
+            Controls.Add(listBoxIterations);
             Controls.Add(buttonFunc);
             Controls.Add(panelFunc);
             Controls.Add(labelFuncError);
@@ -96,6 +131,7 @@
             Controls.Add(labelFunc);
             Name = "Form1";
             Text = "Form1";
+            panelFunc.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -107,5 +143,8 @@
         private TextBox textBoxFunc;
         private Label labelFuncError;
         private Button buttonFunc;
+        private Button buttonReturnSize;
+        private ListBox listBoxIterations;
+        private Label labelIterations;
     }
 }
