@@ -8,19 +8,18 @@
 
     internal class Function
     {
-        private List<Sign> SignsList { get; set; }
-        private Dictionary<char, Func<double, double, double>> BinaryFunctions { get; set; }
-        private Dictionary<string, Func<double, double>> UnaryFunctions { get; set; }
+        private List<Sign> SignsList { get; set; } = [];
+        private Dictionary<char, Func<double, double, double>> BinaryFunctions { get; set; } = [];
+        private Dictionary<string, Func<double, double>> UnaryFunctions { get; set; } = [];
         private string Expression { get; set; }
         public bool IsCorrect { get; set; }
-        private string[] PostfixExpression { get; set; }
+        private string[] PostfixExpression { get; set; } = [];
         
         public Function(string input)
         {
             Initialize();
             Expression = input;
             PostfixParse();
-
         }
 
         private void Initialize()
@@ -44,12 +43,12 @@
             };
             UnaryFunctions = new Dictionary<string, Func<double, double>>
             {
-                { "sin", a => Math.Sin(a) },
-                { "cos", a => Math.Cos(a) },
-                { "tan", a => Math.Tan(a) },
-                { "log", a => Math.Log(a) },
-                { "sqrt", a => Math.Sqrt(a) },
-                { "abs", a => Math.Abs(a) }
+                { "sin", Math.Sin },
+                { "cos", Math.Cos},
+                { "tan", Math.Tan},
+                { "log", Math.Log},
+                { "sqrt", Math.Sqrt },
+                { "abs", Math.Abs}
             };
         }
 
@@ -113,7 +112,10 @@
                     signStackTop++;
                 }
 
-                else notParsedExpression += Expression[i];
+                else
+                {
+                    notParsedExpression += Expression[i];
+                }
             }
 
             if (signStackTop > -1)
@@ -127,8 +129,14 @@
             }
 
             PostfixExpression = notParsedExpression.Split('?');
-            if (argumentFlag == 0 && priorityCorrector == 0) IsCorrect = TryCalculate(0, out _);
-            else IsCorrect = false;
+            if (argumentFlag == 0 && priorityCorrector == 0)
+            {
+                IsCorrect = TryCalculate(0, out _);
+            }
+            else
+            {
+                IsCorrect = false;
+            }
         }
 
         public bool TryCalculate(double x, out double result)
@@ -147,7 +155,11 @@
 
                 if (CheckSignOrNot(PostfixExpression[i], 0, out Sign currentOperator))
                 {
-                    BinaryFunctions.TryGetValue(currentOperator.Value, out var operation);
+                    if (!BinaryFunctions.TryGetValue(currentOperator.Value, out var operation))
+                    {
+                        continue;
+                    }
+                    
                     indexCorrector -= 2;
                     calculatingExpression[i + indexCorrector] = operation(calculatingExpression[i + indexCorrector], calculatingExpression[i + indexCorrector + 1]);
                     continue;
@@ -162,7 +174,7 @@
                 if (PostfixExpression[i].Contains('[') && validFunctions.Contains(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')]))
                 {
                     string arg = PostfixExpression[i].Substring(PostfixExpression[i].IndexOf('[') + 1, PostfixExpression[i].LastIndexOf(']') - PostfixExpression[i].IndexOf('[') - 1);
-                    Function argument = new Function(arg);
+                    var argument = new Function(arg);
                     if (UnaryFunctions.TryGetValue(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')], out var operation) && argument.TryCalculate(x, out calculatingExpression[i + indexCorrector]))
                     {
                         calculatingExpression[i + indexCorrector] = operation(calculatingExpression[i + indexCorrector]);

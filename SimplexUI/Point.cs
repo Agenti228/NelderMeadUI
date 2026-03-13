@@ -61,7 +61,7 @@
 
             return $"{coordinates} {Value}";
         }
-
+        
         public object Clone()
         {
             return new Point(Coordinates, Function);
