@@ -12,7 +12,7 @@ namespace Nelder_Mead_method
         public int Priority = priority;
     }
 
-    internal class Function
+    public class Function
     {
         private List<Sign> SignsList { get; set; }
         private Dictionary<char, Func<double, double, double>> BinaryFunctions { get; set; }
