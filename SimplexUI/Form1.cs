@@ -1,4 +1,3 @@
-using Nelder_Mead_method;
 using System.Linq.Expressions;
 using System.Reflection.Emit;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -28,7 +27,7 @@ namespace SimplexUI
 
         private List<Point[]> simplexes = new List<Point[]>();
 
-        Nelder_Mead_method.Function expr;
+        Function expr;
 
 
         public Form1()
@@ -270,21 +269,21 @@ namespace SimplexUI
 
             double function(double[] point)
             {
-                expr.TryCalculate(point[0], out var result);
+                _ = expr.TryCalculate(point[0], out double result);
                 return result;
             }
 
             double[] x0 = [10];
             double[] x1 = [x0[0] + 2];
 
-            var simplex = new Simplex(settings, [x0, x1], function);
+            var simplex = new Simplex(settings, 1, [10], 2, function);
 
             for (int r = 0; r < settings.MaxIterations; r++)
             {
                 simplex.Iteration();
                 simplexes.Add(simplex.ClonePoints());
                 Console.WriteLine(simplex.GetBest);
-                listBoxIterations.Items.Add($"Iter. {r + 1}: X = {simplex.GetBest[0]}, F[X] = {simplex.GetBest.Value}");
+                _ = listBoxIterations.Items.Add($"Iter. {r + 1}: X = {simplex.GetBest[0]}, F[X] = {simplex.GetBest.Value}");
             }
         }
         #endregion

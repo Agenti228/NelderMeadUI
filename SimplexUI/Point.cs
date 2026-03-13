@@ -8,25 +8,41 @@
 
         public Point(double[] coordinates, Func<double[], double> function)
         {
-            Coordinates = coordinates;
+            Coordinates = new double[coordinates.Length];
+            Array.Copy(coordinates, Coordinates, Coordinates.Length);
+
             Function = function;
-            Value = Function(coordinates);
+            Value = Function(Coordinates);
         }
 
-        /// <summary>
-        /// redo this
-        /// </summary>
         public override bool Equals(object? obj)
         {
-            return base.Equals(obj);
+            if (obj is not Point other)
+            {
+                return false;
+            }
+
+            if (Coordinates.Length != other.Coordinates.Length)
+            {
+                return false;
+            }
+
+            return Coordinates.SequenceEqual(other.Coordinates);
         }
 
-        /// <summary>
-        /// redo this
-        /// </summary>
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            unchecked
+            {
+                int hash = 17;
+
+                foreach (double coordinate in Coordinates)
+                {
+                    hash = hash * 31 + coordinate.GetHashCode();
+                }
+
+                return hash;
+            }
         }
 
         public int CompareTo(Point other)
@@ -51,21 +67,15 @@
             return new Point(Coordinates, Function);
         }
 
-        /// <summary>
-        /// redo function equality
-        /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <exception cref="Exception"></exception>
         private static void CheckForException(Point left, Point right)
         {
             if (left.Function != right.Function)
             {
-                throw new Exception("left and right part have different functions");
+                throw new Exception("Left and right part have different pointers to functions");
             }
             else if (left.Coordinates.Length != right.Coordinates.Length)
             {
-                throw new Exception("left and right part have different dimentions");
+                throw new Exception("Left and right part have different dimentions");
             }
         }
 
@@ -163,12 +173,10 @@
             {
                 return Coordinates[index];
             }
-        }
-
-        public PointF ToPointF()
-        {
-            if (Coordinates.Length > 2 || Coordinates.Length == 0) throw new ArgumentException();
-            return new PointF((float)Coordinates[0], (float)Coordinates[1]);
+            set
+            {
+                Coordinates[index] = value;
+            }
         }
     }
 }

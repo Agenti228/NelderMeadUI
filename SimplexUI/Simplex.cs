@@ -12,18 +12,10 @@
         {
             get
             {
-                //SortPoints(); // not good to sort it like this
                 var center = new Point(new double[_dimention], _function);
-
-                //int worstPointIndex = Array.IndexOf(_points, _points.Max());
 
                 for (int i = 0; i < _points.Length - 1; i++)
                 {
-                    //if (i == worstPointIndex)
-                    //{
-                    //    continue;
-                    //}
-
                     center += _points[i];
                 }
 
@@ -35,12 +27,7 @@
         private readonly Func<double[], double> _function;
         public readonly Point[] _points;
         private readonly int _dimention;
-        /// <summary>
-        /// add auto points creation
-        /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="points"></param>
-        /// <param name="function"></param>
+        
         public Simplex(Settings settings, double[][] points, Func<double[], double> function)
         {
             _settings = settings;
@@ -51,6 +38,26 @@
             for (int i = 0; i < points.Length; i++)
             {
                 _points[i] = new Point(points[i], _function);
+            }
+        }
+
+        public Simplex(Settings settings, int dimention, double[] startingCoordinates, double edgeLength, Func<double[], double> function)
+        {
+            _settings = settings;
+            _dimention = dimention;
+            _points = new Point[_dimention + 1];
+            _function = function;
+
+            double[] x0 = [10];
+            double[] x1 = [x0[0] + 2];
+
+            _points[0] = new Point(startingCoordinates, function);
+            for (int i = 1; i < _points.Length; i++)
+            {
+                var point = new Point(startingCoordinates, _function);
+                point[i - 1] += edgeLength;
+
+                _points[i] = point;
             }
         }
 
@@ -151,7 +158,7 @@
 
         public readonly Point[] ClonePoints()
         {
-            Point[] points = new Point[_points.Length];
+            var points = new Point[_points.Length];
             for (int i = 0; i < _points.Length; i++)
             {
                 points[i] = (Point)_points[i].Clone();

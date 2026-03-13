@@ -1,8 +1,3 @@
-using System;
-using Xunit;
-using SimplexUI;
-using System.Security.Cryptography.X509Certificates;
-
 namespace SimplexUI.Tests
 {
     public class SimplexTests
