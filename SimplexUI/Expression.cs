@@ -24,7 +24,7 @@
 
         private void Initialize()
         {
-            IsCorrect = false;
+            IsCorrect = true;
             SignsList =
             [
                 new Sign('+', 1),
@@ -141,6 +141,12 @@
 
         public bool TryCalculate(double x, out double result)
         {
+            if (!IsCorrect)
+            {
+                result = double.NaN;
+                return false;
+            }
+
             HashSet<string> validFunctions = ["sin", "cos", "tan", "log", "sqrt", "abs"];
             int indexCorrector = 0;
             double[] calculatingExpression = new double[PostfixExpression.Length];
