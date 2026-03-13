@@ -1,5 +1,3 @@
-using Nelder_Mead_method;
-
 namespace SimplexUI
 {
     internal static class Program

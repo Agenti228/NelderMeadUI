@@ -1,9 +1,3 @@
-using Nelder_Mead_method;
-using System.Linq.Expressions;
-using System.Reflection.Emit;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-
 namespace SimplexUI
 {
     public partial class Form1 : Form
@@ -28,7 +22,7 @@ namespace SimplexUI
 
         private List<Point[]> simplexes = new List<Point[]>();
 
-        Nelder_Mead_method.Function expr;
+        Function expr;
 
 
         public Form1()
@@ -38,7 +32,7 @@ namespace SimplexUI
             funcColor = Color.Red;
             panelFunc.MouseWheel += PanelFunc_MouseWheel;
             backBrush = new SolidBrush(Color.White);
-            expr = new Nelder_Mead_method.Function(textBoxFunc.Text);
+            expr = new Function(textBoxFunc.Text);
         }
 
         #region XY methods
@@ -161,7 +155,7 @@ namespace SimplexUI
 
         private void ButtonFunc_Click(object sender, EventArgs e)
         {
-            expr = new Nelder_Mead_method.Function(textBoxFunc.Text);
+            expr = new Function(textBoxFunc.Text);
             if (!expr.IsCorrect) labelFuncError.Visible = true;
             else labelFuncError.Visible = false;
             listBoxIterations.Items.Clear();
