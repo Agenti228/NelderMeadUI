@@ -205,7 +205,7 @@ namespace SimplexUI.Tests
 
             // Act & Assert
             var ex = Assert.Throws<Exception>(() => simplex.Reflect(point1, point2));
-            Assert.Equal("left and right part have different functions", ex.Message);
+            Assert.Equal("Left and right part have different pointers to functions", ex.Message);
         }
 
         [Fact]
