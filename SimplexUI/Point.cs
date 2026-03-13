@@ -51,6 +51,12 @@
             return new Point(Coordinates, Function);
         }
 
+        /// <summary>
+        /// redo function equality
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <exception cref="Exception"></exception>
         private static void CheckForException(Point left, Point right)
         {
             if (left.Function != right.Function)

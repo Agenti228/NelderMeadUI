@@ -35,7 +35,12 @@
         private readonly Func<double[], double> _function;
         public readonly Point[] _points;
         private readonly int _dimention;
-
+        /// <summary>
+        /// add auto points creation
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <param name="points"></param>
+        /// <param name="function"></param>
         public Simplex(Settings settings, double[][] points, Func<double[], double> function)
         {
             _settings = settings;
