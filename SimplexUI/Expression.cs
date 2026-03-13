@@ -31,6 +31,7 @@
                 new Sign('-', 1),
                 new Sign('*', 2),
                 new Sign('/', 2),
+                new Sign('^', 3),
                 new Sign('(', 0),
                 new Sign(')', 0)
             ];
@@ -39,16 +40,18 @@
                 { '+', (a, b) => a + b },
                 { '-', (a, b) => a - b },
                 { '*', (a, b) => a * b },
-                { '/', (a, b) => a / b }
+                { '/', (a, b) => a / b },
+                { '^', Math.Pow }
             };
             UnaryFunctions = new Dictionary<string, Func<double, double>>
             {
                 { "sin", Math.Sin },
-                { "cos", Math.Cos},
-                { "tan", Math.Tan},
-                { "log", Math.Log},
+                { "cos", Math.Cos },
+                { "tan", Math.Tan },
+                { "log", Math.Log },
                 { "sqrt", Math.Sqrt },
-                { "abs", Math.Abs}
+                { "abs", Math.Abs },
+                { "exp", Math.Exp }
             };
         }
 
@@ -131,7 +134,7 @@
             PostfixExpression = notParsedExpression.Split('?');
             if (argumentFlag == 0 && priorityCorrector == 0)
             {
-                IsCorrect = TryCalculate(2, out _);
+                IsCorrect = TryCalculate(0, out _);
             }
             else
             {
@@ -147,7 +150,7 @@
                 return false;
             }
 
-            HashSet<string> validFunctions = ["sin", "cos", "tan", "log", "sqrt", "abs"];
+            HashSet<string> validFunctions = ["sin", "cos", "tan", "log", "sqrt", "abs", "exp"];
             int indexCorrector = 0;
             double[] calculatingExpression = new double[PostfixExpression.Length];
             result = double.NaN;

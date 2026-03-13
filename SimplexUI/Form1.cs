@@ -33,7 +33,6 @@ namespace SimplexUI
             _funcColor = Color.Red;
             panelFunc.MouseWheel += PanelFunc_MouseWheel;
             _backBrush = new SolidBrush(Color.White);
-            textBoxFunc.Text = "x*x+x+1";
             _expr = new Function(textBoxFunc.Text);
         }
 
@@ -142,6 +141,11 @@ namespace SimplexUI
                     {
                         PointF frstPnt = FuncToPanelXY(new PointF((float)_simplexes[i][j - 1][0], (float)_simplexes[i][j - 1].Value));
                         PointF scndPnt = FuncToPanelXY(new PointF((float)_simplexes[i][j][0], (float)_simplexes[i][j].Value));
+                        if (double.IsNegativeInfinity(frstPnt.Y) || double.IsInfinity(frstPnt.Y) || double.IsNegativeInfinity(scndPnt.Y) || double.IsInfinity(scndPnt.Y)) 
+                        { 
+                            continue; 
+                        }
+
                         g.DrawLine(p, frstPnt, scndPnt);
                         g.DrawRectangle(Pens.Blue, frstPnt.X - 2, frstPnt.Y - 2, 4, 4);
                         g.DrawRectangle(Pens.Blue, scndPnt.X - 2, scndPnt.Y - 2, 4, 4);
