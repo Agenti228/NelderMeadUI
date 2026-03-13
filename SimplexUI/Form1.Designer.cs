@@ -129,8 +129,11 @@
             Controls.Add(labelFuncError);
             Controls.Add(textBoxFunc);
             Controls.Add(labelFunc);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximumSize = new Size(816, 299);
+            MinimumSize = new Size(816, 299);
             Name = "Form1";
-            Text = "Form1";
+            Text = "SimplexUI";
             panelFunc.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
