@@ -23,6 +23,7 @@ namespace SimplexUI
 
         private readonly List<Point[]> _simplexes = [];
 
+
         private Function _expr;
 
 
@@ -175,7 +176,7 @@ namespace SimplexUI
             {
                 labelFuncError.Visible = false;
             }
-
+            
             listBoxIterations.Items.Clear();
             SimplexMethod();
             panelFunc.Invalidate();
