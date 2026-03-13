@@ -131,7 +131,7 @@
             PostfixExpression = notParsedExpression.Split('?');
             if (argumentFlag == 0 && priorityCorrector == 0)
             {
-                IsCorrect = TryCalculate(0, out _);
+                IsCorrect = TryCalculate(2, out _);
             }
             else
             {
@@ -154,7 +154,7 @@
 
             for (int i = 0; i < PostfixExpression.Length; i++)
             {
-                if (double.TryParse(PostfixExpression[i], out calculatingExpression[i]))
+                if (double.TryParse(PostfixExpression[i], out calculatingExpression[i + indexCorrector]))
                 {
                     continue;
                 }

@@ -10,36 +10,38 @@ namespace SimplexUI
         //функция
 
         //скаляры
-        private float scaler;
+        private float _scaler;
         //стиль
-        private Color funcColor;
-        private readonly Brush backBrush;
+        //стиль
+        private Color _funcColor;
+        private readonly Brush _backBrush;
         //точки
-        private PointF centerXY;
-        private PointF lastXY; //для определения дельты перемещения графика
+        private PointF _centerXY;
+        private PointF _lastXY; //для определения дельты перемещения графика
         //флаги
-        private bool isMovingScreen = false;
+        private bool _isMovingScreen = false;
 
-        private readonly List<Point[]> simplexes = new List<Point[]>();
+        private readonly List<Point[]> _simplexes = [];
 
-        private Function expr;
+        private Function _expr;
 
 
         public Form1()
         {
             InitializeComponent();
             SetStartParametres();
-            funcColor = Color.Red;
+            _funcColor = Color.Red;
             panelFunc.MouseWheel += PanelFunc_MouseWheel;
-            backBrush = new SolidBrush(Color.White);
-            expr = new Function(textBoxFunc.Text);
+            _backBrush = new SolidBrush(Color.White);
+            textBoxFunc.Text = "x*x+x+1";
+            _expr = new Function(textBoxFunc.Text);
         }
 
         #region XY methods
         private void SetStartParametres()
         {
-            centerXY = new PointF((panelFunc.Right - panelFunc.Left) / 2, (panelFunc.Bottom - panelFunc.Top) / 2);
-            scaler = 40;
+            _centerXY = new PointF((panelFunc.Right - panelFunc.Left) / 2, (panelFunc.Bottom - panelFunc.Top) / 2);
+            _scaler = 40;
             buttonReturnSize.Visible = buttonReturnSize.Enabled = labelFuncError.Visible = false;
             listBoxIterations.Items.Clear();
         }
@@ -48,13 +50,13 @@ namespace SimplexUI
         {
             try
             {
-                float[] dash = { scaler / 8, scaler / 8 };
-                Pen p = new Pen(Color.Black);
+                float[] dash = { _scaler / 8, _scaler / 8 };
+                using var p = new Pen(Color.Black);
                 p.Width = 2;
-                g.DrawLine(p, centerXY.X, 0, centerXY.X, panelFunc.ClientSize.Height);
-                g.DrawLine(p, 0, centerXY.Y, panelFunc.ClientSize.Width, centerXY.Y);
+                g.DrawLine(p, _centerXY.X, 0, _centerXY.X, panelFunc.ClientSize.Height);
+                g.DrawLine(p, 0, _centerXY.Y, panelFunc.ClientSize.Width, _centerXY.Y);
                 p.DashPattern = dash;
-                g.DrawEllipse(p, centerXY.X - scaler, centerXY.Y - scaler, scaler * 2, scaler * 2);
+                g.DrawEllipse(p, _centerXY.X - _scaler, _centerXY.Y - _scaler, _scaler * 2, _scaler * 2);
                 p.Dispose();
             }
             catch
@@ -67,21 +69,31 @@ namespace SimplexUI
 
         private PointF PanelToFuncXY(PointF pnt)
         {
-            if (pnt.Y > centerXY.Y)
-                pnt.Y = -Math.Abs(pnt.Y - centerXY.Y) / scaler;
+            if (pnt.Y > _centerXY.Y)
+            {
+                pnt.Y = -Math.Abs(pnt.Y - _centerXY.Y) / _scaler;
+            }
             else
-                pnt.Y = Math.Abs(centerXY.Y - pnt.Y) / scaler;
-            if (pnt.X > centerXY.X)
-                pnt.X = Math.Abs(pnt.X - centerXY.X) / scaler;
+            {
+                pnt.Y = Math.Abs(_centerXY.Y - pnt.Y) / _scaler;
+            }
+
+            if (pnt.X > _centerXY.X)
+            {
+                pnt.X = Math.Abs(pnt.X - _centerXY.X) / _scaler;
+            }
             else
-                pnt.X = -Math.Abs(centerXY.X - pnt.X) / scaler;
+            {
+                pnt.X = -Math.Abs(_centerXY.X - pnt.X) / _scaler;
+            }
+
             return pnt;
         }
 
         private PointF FuncToPanelXY(PointF pnt)
         {
-            pnt.X = (scaler * pnt.X) + centerXY.X;
-            pnt.Y = (-scaler * pnt.Y) + centerXY.Y;
+            pnt.X = (_scaler * pnt.X) + _centerXY.X;
+            pnt.Y = (-_scaler * pnt.Y) + _centerXY.Y;
             return pnt;
         }
         #endregion
@@ -89,23 +101,26 @@ namespace SimplexUI
         #region Draw methods
         private void DrawFunc(Graphics g)
         {
-            List<PointF> funcPointList = new List<PointF>();
+            var funcPointList = new List<PointF>();
             PointF pnt = new System.Drawing.Point();
-            Pen p = new Pen(funcColor);
-            p.Width = 2;
-            if (expr != null && expr.IsCorrect)
+            var p = new Pen(_funcColor)
+            {
+                Width = 2
+            };
+            if (_expr != null && _expr.IsCorrect)
             {
                 for (float i = 0; i < panelFunc.Width; i++)
                 {
                     pnt.X = i;
                     pnt.Y = 0;
-                    pnt = PanelToFuncXY(pnt);
-                    expr.TryCalculate(pnt.X, out var result);
+                    PointF pointF = PanelToFuncXY(pnt);
+                    pnt = pointF;
+                    _expr.TryCalculate(pnt.X, out double result);
                     pnt.Y = (float)result;
                     funcPointList.Add(FuncToPanelXY(pnt));
                 }
 
-                for (int i = 1; i < funcPointList.Count(); i++)
+                for (int i = 1; i < funcPointList.Count; i++)
                 {
                     if (Math.Abs(funcPointList[i - 1].Y - funcPointList[i].Y) < panelFunc.Height)
                     {
@@ -117,18 +132,16 @@ namespace SimplexUI
         }
         private void DrawSimplex(Graphics g)
         {
-
-            PointF pnt = new System.Drawing.Point();
-            Pen p = new Pen(Color.DeepPink);
+            using var p = new Pen(Color.DeepPink);
             p.Width = 2;
-            if (expr != null && expr.IsCorrect)
+            if (_expr != null && _expr.IsCorrect)
             {
-                for (int i = 0; i < simplexes.Count; i++)
+                for (int i = 0; i < _simplexes.Count; i++)
                 {
-                    for (int j = 1; j < simplexes[i].Length; j++)
+                    for (int j = 1; j < _simplexes[i].Length; j++)
                     {
-                        PointF frstPnt = FuncToPanelXY(new PointF((float)simplexes[i][j - 1][0], (float)simplexes[i][j - 1].Value));
-                        PointF scndPnt = FuncToPanelXY(new PointF((float)simplexes[i][j][0], (float)simplexes[i][j].Value));
+                        PointF frstPnt = FuncToPanelXY(new PointF((float)_simplexes[i][j - 1][0], (float)_simplexes[i][j - 1].Value));
+                        PointF scndPnt = FuncToPanelXY(new PointF((float)_simplexes[i][j][0], (float)_simplexes[i][j].Value));
                         g.DrawLine(p, frstPnt, scndPnt);
                         g.DrawRectangle(Pens.Blue, frstPnt.X - 2, frstPnt.Y - 2, 4, 4);
                         g.DrawRectangle(Pens.Blue, scndPnt.X - 2, scndPnt.Y - 2, 4, 4);
@@ -140,31 +153,25 @@ namespace SimplexUI
 
         #region Buttons
 
-        private void ButtonColorFunc_Click(object sender, EventArgs e)
-        {
-            ColorDialog colorChanger = new ColorDialog();
-            colorChanger.FullOpen = true;
-            colorChanger.Color = funcColor;
-            if (colorChanger.ShowDialog() == DialogResult.Cancel)
-                return;
-            funcColor = colorChanger.Color;
-            panelFunc.Invalidate();
-        }
-
         private void ButtonStartScale_Click(object sender, EventArgs e)
         {
-            centerXY = new PointF(((panelFunc.Right - panelFunc.Left) / 2) + panelFunc.Left, ((panelFunc.Top - panelFunc.Bottom) / 2) + panelFunc.Bottom);
-            scaler = 40;
+            _centerXY = new PointF(((panelFunc.Right - panelFunc.Left) / 2) + panelFunc.Left, ((panelFunc.Top - panelFunc.Bottom) / 2) + panelFunc.Bottom);
+            _scaler = 40;
             panelFunc.Invalidate();
         }
 
         private void ButtonFunc_Click(object sender, EventArgs e)
         {
-            expr = new Function(textBoxFunc.Text);
-            if (!expr.IsCorrect)
+            _expr = new Function(textBoxFunc.Text);
+            if (!_expr.IsCorrect)
+            {
                 labelFuncError.Visible = true;
+            }
             else
+            {
                 labelFuncError.Visible = false;
+            }
+
             listBoxIterations.Items.Clear();
             SimplexMethod();
             panelFunc.Invalidate();
@@ -172,7 +179,7 @@ namespace SimplexUI
 
         private void ButtonReturnSize_Click(object sender, EventArgs e)
         {
-            scaler = 40;
+            _scaler = 40;
             buttonReturnSize.Visible = buttonReturnSize.Enabled = false;
             panelFunc.Invalidate();
         }
@@ -182,11 +189,19 @@ namespace SimplexUI
         private void PanelFunc_Paint(object sender, PaintEventArgs e)
         {
             if (panelFunc.BackgroundImage == null)
-                e.Graphics.FillRectangle(backBrush, panelFunc.ClientRectangle);
-            if (scaler != 40)
+            {
+                e.Graphics.FillRectangle(_backBrush, panelFunc.ClientRectangle);
+            }
+
+            if (_scaler != 40)
+            {
                 buttonReturnSize.Visible = buttonReturnSize.Enabled = true;
+            }
             else
+            {
                 buttonReturnSize.Visible = buttonReturnSize.Enabled = false;
+            }
+
             XYLinesInit(e.Graphics);
             DrawFunc(e.Graphics);
             DrawSimplex(e.Graphics);
@@ -201,24 +216,24 @@ namespace SimplexUI
 
             int MAX_SCALE = 300;
             int MIN_SCALE = 1;
-            PointF worldPoint = new PointF
+            var worldPoint = new PointF
             {
-                X = (e.Location.X - centerXY.X) / scaler,
-                Y = (e.Location.Y - centerXY.Y) / scaler
+                X = (e.Location.X - _centerXY.X) / _scaler,
+                Y = (e.Location.Y - _centerXY.Y) / _scaler
             };
 
-            if (e.Delta > 0 && scaler < MAX_SCALE)
+            if (e.Delta > 0 && _scaler < MAX_SCALE)
             {
-                scaler = Math.Min(scaler * 1.1f, MAX_SCALE);
+                _scaler = Math.Min(_scaler * 1.1f, MAX_SCALE);
             }
 
-            else if (e.Delta < 0 && scaler > MIN_SCALE)
+            else if (e.Delta < 0 && _scaler > MIN_SCALE)
             {
-                scaler = Math.Max(scaler / 1.1f, MIN_SCALE);
+                _scaler = Math.Max(_scaler / 1.1f, MIN_SCALE);
             }
 
-            centerXY.X = e.Location.X - (worldPoint.X * scaler);
-            centerXY.Y = e.Location.Y - (worldPoint.Y * scaler);
+            _centerXY.X = e.Location.X - (worldPoint.X * _scaler);
+            _centerXY.Y = e.Location.Y - (worldPoint.Y * _scaler);
             panelFunc.Invalidate();
         }
 
@@ -226,36 +241,35 @@ namespace SimplexUI
         {
             if (e.Button == MouseButtons.Left)
             {
-                isMovingScreen = true;
-                lastXY = e.Location;
+                _isMovingScreen = true;
+                _lastXY = e.Location;
             }
         }
 
         private void PanelFunc_MouseUp(object sender, MouseEventArgs e)
         {
-            isMovingScreen = false;
+            _isMovingScreen = false;
         }
 
         private void PanelFunc_MouseMove(object sender, MouseEventArgs e)
         {
-            if (isMovingScreen)
+            if (_isMovingScreen)
             {
                 PointF currentXY = e.Location;
-                PointF delta = new PointF
+                var delta = new PointF
                 {
-                    X = currentXY.X - lastXY.X,
-                    Y = currentXY.Y - lastXY.Y
+                    X = currentXY.X - _lastXY.X,
+                    Y = currentXY.Y - _lastXY.Y
                 };
-                lastXY = currentXY;
-                centerXY.X += delta.X;
-                centerXY.Y += delta.Y;
+                _lastXY = currentXY;
+                _centerXY.X += delta.X;
+                _centerXY.Y += delta.Y;
                 panelFunc.Invalidate();
             }
         }
 
         private void PanelFunc_MouseClick(object sender, MouseEventArgs e)
         {
-            PointF position = e.Location;
             panelFunc.Invalidate();
         }
         #endregion
@@ -275,11 +289,11 @@ namespace SimplexUI
 
             var settings = new Settings(1, 100);
 
-            simplexes.Clear();
+            _simplexes.Clear();
 
             double function(double[] point)
             {
-                _ = expr.TryCalculate(point[0], out double result);
+                _ = _expr.TryCalculate(point[0], out double result);
                 return result;
             }
 
@@ -291,7 +305,7 @@ namespace SimplexUI
             for (int r = 0; r < settings.MaxIterations; r++)
             {
                 simplex.Iteration();
-                simplexes.Add(simplex.ClonePoints());
+                _simplexes.Add(simplex.ClonePoints());
                 Console.WriteLine(simplex.GetBest);
                 _ = listBoxIterations.Items.Add($"Iter. {r + 1}: X = {simplex.GetBest[0]}, F[X] = {simplex.GetBest.Value}");
             }
