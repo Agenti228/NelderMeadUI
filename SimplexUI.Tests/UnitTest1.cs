@@ -2,6 +2,7 @@ namespace SimplexUI.Tests
 {
     public class SimplexTests
     {
+        const double _tolerance = 0.00000001;
         static double TestFunction(double[] x)
         {
             return x[0];
@@ -92,7 +93,6 @@ namespace SimplexUI.Tests
         {
             // Arrange
             var settings = new Settings();
-            // Точки: (0,0)=0, (2,0)=2, (0,4)=4 – после сортировки худшая (0,4)
             double[][] coords = { [0.0, 0.0], [2.0, 0.0], [0.0, 4.0] };
             static double func(double[] x) => x[0] + x[1];
             var simplex = new Simplex(settings, coords, func);
@@ -102,17 +102,15 @@ namespace SimplexUI.Tests
             var center = simplex.GetCenter;
 
             // Assert
-            // Центр должен быть средним арифметическим первых двух точек: ((0+2)/2, (0+0)/2) = (1,0)
             Assert.Equal(1.0, center.Coordinates[0]);
             Assert.Equal(0.0, center.Coordinates[1]);
-            // Значение функции в центре: 1+0 = 1
             Assert.Equal(1.0, center.Value);
         }
 
         // Тест метода Reflect – проверка формулы отражения
         [Theory]
-        [InlineData(1.0)] // стандартное отражение
-        [InlineData(0.8)] // другой коэффициент
+        [InlineData(1.0)]
+        [InlineData(0.8)]
         public void Reflect_ShouldReturnCorrectPoint(double reflectionCoeff)
         {
             // Arrange
@@ -125,7 +123,7 @@ namespace SimplexUI.Tests
             // Act
             var reflected = simplex.Reflect(worst, center);
 
-            // Ожидаемая формула: center + (center - worst) * reflectionCoeff
+            // Ожидаемая формула:
             double expected = 1 + (1 - 3) * reflectionCoeff;//reflectionPoint + (reflectionPoint - reflectedPoint) * _settings.Reflection;
 
             // Assert
@@ -147,9 +145,6 @@ namespace SimplexUI.Tests
 
             // Act
             var expanded = simplex.Expand(expandedPoint, center);
-
-            // Формула: center + (expandedPoint - center) * stretchCoeff
-            // expandedPoint - center = 2, умноженное на coeff, плюс center = 1 + 2*coeff
             double expected = 1.0 + 2.0 * stretchCoeff;
 
             // Assert
@@ -166,7 +161,7 @@ namespace SimplexUI.Tests
             double[][] coords = [[0.0], [1.0], [2.0]];
             var simplex = new Simplex(settings, coords, TestFunction);
             var newPoint = new Point([5.0], TestFunction);
-            var originalPoints = simplex.ClonePoints(); // сохраняем копию до замены
+            var originalPoints = simplex.ClonePoints();
 
             // Act
             simplex.ReplaceWorst(newPoint);
@@ -181,7 +176,6 @@ namespace SimplexUI.Tests
             Assert.Equal(5.0, points[2].Coordinates[0]);
         }
 
-        // Тест метода ReduceSimplex – все точки, кроме лучшей, сжимаются к лучшей
         [Fact]
         public void ReduceSimplex_ShouldShrinkAllPointsTowardsBest()
         {
@@ -189,7 +183,7 @@ namespace SimplexUI.Tests
             var settings = new Settings { Reduction = 0.5 };
             double[][] coords = [[0.0], [4.0], [8.0]];
             var simplex = new Simplex(settings, coords, TestFunction);
-            simplex.SortPoints(); // после сортировки: best=0, second=4, worst=8
+            simplex.SortPoints();
 
             // Act
             simplex.ReduceSimplex();
@@ -197,15 +191,10 @@ namespace SimplexUI.Tests
 
             // Assert
             Assert.Equal(0.0, points[0].Coordinates[0]); // лучшая не меняется
-            // Остальные: best + (old - best) * reduction
             Assert.Equal(0.0 + (4.0 - 0.0) * 0.5, points[1].Coordinates[0]); // 2.0
             Assert.Equal(0.0 + (8.0 - 0.0) * 0.5, points[2].Coordinates[0]); // 4.0
         }
 
-        // Тест метода Iteration – один из возможных сценариев !!!!!!
-        
-
-        //Тест исключения при несовместимых точках в методе Reflect
         [Fact]
         public void Reflect_WhenPointsHaveDifferentFunctions_ThrowsException()
         {
@@ -217,6 +206,165 @@ namespace SimplexUI.Tests
             // Act & Assert
             var ex = Assert.Throws<Exception>(() => simplex.Reflect(point1, point2));
             Assert.Equal("left and right part have different functions", ex.Message);
+        }
+
+        [Fact]
+        public void Iteration_WhenReflectedisBestAndExpandedBetter_ShouldReplaceWorstWithExpanded()
+        {
+            //Arrange
+            var settings = new Settings { Reflection = 1.0, Stretching = 2.0 };
+            double[][] coords = [[0, 0], [3, 0], [0, 4]];
+            Func<double[], double> func = x => x[0] + x[1];
+            var simplex = new Simplex(settings, coords, func);
+            simplex.SortPoints();
+
+            //Act
+            simplex.Iteration();
+            var points = simplex.ClonePoints();
+            var worst = points[^1];
+
+            //Assert
+            Assert.Equal(4.5, worst.Coordinates[0]);
+            Assert.Equal(-8.0, worst.Coordinates[1]);
+            Assert.Equal(-3.5, worst.Value);
+        }
+
+        [Fact]
+        public void Iteration_WhenReflectedIsBestAndExpandedNotBetter_ShouldReplaceWorstWithReflected()
+        {
+            //Arrange
+            var settings = new Settings { Reflection = 1.0, Stretching = 2.0 };
+            double[][] coords = [[3, 0], [4, 0], [5, 0]];
+            Func<double[], double> func = x => Math.Pow(x[0] - 2,2);
+            var simplex = new Simplex(settings, coords, func);
+            simplex.SortPoints();
+
+            //Act
+            simplex.Iteration();
+            var points = simplex.ClonePoints();
+            var worst = points[^1];
+
+            //Assert
+            Assert.Equal(2.0, worst.Coordinates[0]);
+            Assert.Equal(0.0, worst.Coordinates[1]);
+            Assert.Equal(0.0, worst.Value);
+        }
+
+        [Fact]
+        public void Iteration_WhenReflectedIsBetweenBestAndSecondBest_ShouldReplaceWorstWithReflected()
+        {
+            //Arrange
+            var settings = new Settings { Reflection = 1.0 };
+            double[][] coords = [[2, 0], [4, 0], [5, 0]];
+            Func<double[], double> func = x => Math.Pow(x[0] - 2, 2);
+            var simplex = new Simplex(settings, coords, func);
+            simplex.SortPoints();
+
+            //Act
+            simplex.Iteration();
+            var points = simplex.ClonePoints();
+            var worst = points[^1];
+
+            //Assert
+            Assert.Equal(1.0, worst.Coordinates[0]);
+            Assert.Equal(0.0, worst.Coordinates[1]);
+            Assert.Equal(1.0, worst.Value);
+        }
+
+        [Fact]
+        public void Iteration_WhenReflectedWorseThanSecondButBetterThanWorstAndOutsideContractionIsBetter_ShouldReplaceWorstWithContractedOutside()
+        {
+            //Arrange
+            var settings = new Settings { Reflection = 1.0, Compression = 0.5 };
+            double[][] coords = [[2, 0], [3.2, 0], [5, 0]];
+            Func<double[], double> func = x => Math.Pow(x[0] - 2, 2);
+            var simplex = new Simplex(settings, coords, func);
+            simplex.SortPoints();
+
+            //Act
+            simplex.Iteration();
+            var points = simplex.ClonePoints();
+            var worst = points[^1];
+
+            //Assert
+            Assert.Equal(1.4, worst.Coordinates[0], _tolerance);
+            Assert.Equal(0.0, worst.Coordinates[1]);
+            Assert.Equal(0.36, worst.Value, _tolerance);
+        }
+
+        [Fact]
+        public void Iteration_WhenReflectedIsWorseThanWorstAndInsideContractionIsBetter_ShouldReplaceWorstWithContractedInside()
+        {
+            //Arrange
+            var settings = new Settings { Reflection = 1.0, Compression = 0.5 };
+            double[][] coords = [[2, 0], [3, 0], [0.5, 0]];
+            Func<double[], double> func = x => Math.Pow(x[0] - 2, 2);
+            var simplex = new Simplex(settings, coords, func);
+            simplex.SortPoints();
+
+            //Act
+            simplex.Iteration();
+            var points = simplex.ClonePoints();
+            var worst = points[^1];
+
+            //Assert
+            Assert.Equal(1.5, worst.Coordinates[0]);
+            Assert.Equal(0.0, worst.Coordinates[1]);
+            Assert.Equal(0.25, worst.Value);
+        }
+
+        [Fact]
+        public void Iteration_WhenReflectedIsWorseThanSecondButBetterThanWorstAndOutsideContractionIsNotBetter_ShouldReduceSimplex()
+        {
+            //Arrange
+            var settings = new Settings { Reflection = 1.0, Compression = 0.5, Reduction = 0.5 };
+            double[][] coords = [[2.0, 0.0], [3.2, 0.0], [5.0, 0.0]];
+            Func<double[], double> func = (x) =>
+            {
+                double x0 = x[0];
+                if (Math.Abs(x0 - 2.6) < 1e-6) return 0.36;   // центр
+                if (Math.Abs(x0 - 0.2) < 1e-6) return 3.24;   // отражённая
+                if (Math.Abs(x0 - 1.4) < 1e-6) return 5.0;    // внешнее сжатие (хуже)
+                return Math.Pow(x0 - 2, 2);
+            };
+            var simplex = new Simplex(settings, coords, func);
+            simplex.SortPoints();
+
+            //Act
+            simplex.Iteration();
+            var points = simplex.ClonePoints();
+
+            //Assert
+            Assert.Equal(2.0, points[0].Coordinates[0], 2);
+            Assert.Equal(2.6, points[1].Coordinates[0], 2);
+            Assert.Equal(3.5, points[2].Coordinates[0], 2);
+        }
+
+        [Fact]
+        public void Iteration_WhenReflectedIsWorseThanWorstAndInsideContractionIsNotBetter_ShouldReduceSimplex()
+        {
+            //Arrange
+            var settings = new Settings { Reflection = 1.0, Compression = 0.5, Reduction = 0.5 };
+            double[][] coords = [[2.0, 0.0], [3.0, 0.0], [0.5, 0.0]];
+            Func<double[], double> func = (x) =>
+            {
+                double x0 = x[0];
+                if (Math.Abs(x0 - 2.5) < 1e-6) return 0.25;   // центр
+                if (Math.Abs(x0 - 4.5) < 1e-6) return 6.25;   // отражённая
+                if (Math.Abs(x0 - 1.5) < 1e-6) return 3.0;    // внутреннее сжатие (хуже)
+                return Math.Pow(x0 - 2, 2);
+            };
+            var simplex = new Simplex(settings, coords, func);
+            simplex.SortPoints();
+
+            //Act
+            simplex.Iteration();
+            var points = simplex.ClonePoints();
+
+            //Assert
+            Assert.Equal(2.0, points[0].Coordinates[0], 2);
+            Assert.Equal(2.5, points[1].Coordinates[0], 2);
+            Assert.Equal(1.25, points[2].Coordinates[0], 2);
         }
     }
 }
