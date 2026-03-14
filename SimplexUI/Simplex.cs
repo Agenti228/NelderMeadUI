@@ -2,17 +2,26 @@
 {
     public readonly struct Simplex
     {
-        public readonly Point GetBest => _points[0];
-        public readonly Point GetSecondBest => _points[1];
-        public readonly Point GetWorst => _points[^1];
         /// <summary>
-        /// <see cref="_points"/> MUST be sorted before calculating center
+        /// Simplex points MUST be sorted before calling this
         /// </summary>
-        public readonly Point GetCenter 
+        public readonly EvaluateableVector GetBestInSorted => _points[0];
+        /// <summary>
+        /// <inheritdoc cref="GetBestInSorted"/>
+        /// </summary>
+        public readonly EvaluateableVector GetSecondBestInSorted => _points[1];
+        /// <summary>
+        /// <inheritdoc cref="GetBestInSorted"/>
+        /// </summary>
+        public readonly EvaluateableVector GetWorstInSorted => _points[^1];
+        /// <summary>
+        /// <inheritdoc cref="GetBestInSorted"/>
+        /// </summary>
+        public readonly EvaluateableVector GetCenterInSorted 
         {
             get
             {
-                var center = new Point(new double[_dimention], _function);
+                var center = new EvaluateableVector(new double[_initialConditions.SimplexDimention - 1], _initialConditions.VectorFunction);
 
                 for (int i = 0; i < _points.Length - 1; i++)
                 {
@@ -24,52 +33,27 @@
         }
 
         private readonly Settings _settings = new();
-        private readonly Func<double[], double> _function;
-        public readonly Point[] _points;
-        private readonly int _dimention;
-        
-        public Simplex(Settings settings, double[][] points, Func<double[], double> function)
+        private readonly InitialConditions _initialConditions = new();
+        private readonly EvaluateableVector[] _points;
+
+        public Simplex(Settings settings, InitialConditions initialConditions)
         {
             _settings = settings;
-            _points = new Point[points.Length];
-            _dimention = _points.Length - 1;
-            _function = function;
+            _initialConditions = initialConditions;
 
-            for (int i = 0; i < points.Length; i++)
-            {
-                _points[i] = new Point(points[i], _function);
-            }
-        }
-
-        public Simplex(Settings settings, int dimention, double[] startingCoordinates, double edgeLength, Func<double[], double> function)
-        {
-            _settings = settings;
-            _dimention = dimention;
-            _points = new Point[_dimention + 1];
-            _function = function;
-
-            double[] x0 = [10];
-            double[] x1 = [x0[0] + 2];
-
-            _points[0] = new Point(startingCoordinates, function);
-            for (int i = 1; i < _points.Length; i++)
-            {
-                var point = new Point(startingCoordinates, _function);
-                point[i - 1] += edgeLength;
-
-                _points[i] = point;
-            }
+            _points = new EvaluateableVector[initialConditions.SimplexDimention];
+            Array.Copy(initialConditions.InitialVectors, _points, _points.Length);
         }
 
         public readonly void Iteration()
         {
             SortPoints();
 
-            Point reflected = Reflect(GetWorst, GetCenter);
+            EvaluateableVector reflected = Reflect(GetWorstInSorted, GetCenterInSorted);
 
-            if (reflected < GetBest)
+            if (reflected < GetBestInSorted)
             {
-                Point expanded = Expand(reflected, GetCenter);
+                EvaluateableVector expanded = Expand(reflected, GetCenterInSorted);
 
                 if (expanded < reflected)
                 {
@@ -80,17 +64,17 @@
                     ReplaceWorst(reflected);
                 }
             }
-            else if (reflected < GetSecondBest)
+            else if (reflected < GetSecondBestInSorted)
             {
                 ReplaceWorst(reflected);
             }
             else
             {
-                Point contracted;
+                EvaluateableVector contracted;
 
-                if (reflected < GetWorst)
+                if (reflected < GetWorstInSorted)
                 {
-                    contracted = ContractOutside(reflected, GetCenter);
+                    contracted = ContractOutside(reflected, GetCenterInSorted);
 
                     if (contracted < reflected)
                     {
@@ -103,9 +87,9 @@
                 }
                 else
                 {
-                    contracted = ContractInside(GetWorst, GetCenter);
+                    contracted = ContractInside(GetWorstInSorted, GetCenterInSorted);
 
-                    if (contracted < GetWorst)
+                    if (contracted < GetWorstInSorted)
                     {
                         ReplaceWorst(contracted);
                     }
@@ -122,46 +106,46 @@
             Array.Sort(_points);
         }
 
-        public readonly Point Reflect(Point reflectedPoint, Point reflectionPoint)
+        public readonly EvaluateableVector Reflect(EvaluateableVector reflectedPoint, EvaluateableVector reflectionPoint)
         {
             return reflectionPoint + (reflectionPoint - reflectedPoint) * _settings.Reflection;
         }
 
-        public readonly Point Expand(Point expandedPoint, Point expantionPoint)
+        public readonly EvaluateableVector Expand(EvaluateableVector expandedPoint, EvaluateableVector expantionPoint)
         {
             return expantionPoint + (expandedPoint - expantionPoint) * _settings.Stretching;
         }
 
-        public readonly Point ContractInside(Point contractedPoint, Point contractionPoint)
+        public readonly EvaluateableVector ContractInside(EvaluateableVector contractedPoint, EvaluateableVector contractionPoint)
         {
             return contractionPoint + (contractedPoint - contractionPoint) * _settings.Compression;
         }
 
-        public readonly Point ContractOutside(Point contractedPoint, Point contractionPoint)
+        public readonly EvaluateableVector ContractOutside(EvaluateableVector contractedPoint, EvaluateableVector contractionPoint)
         {
             return contractionPoint - (contractionPoint - contractedPoint) * _settings.Compression;
         }
 
-        public readonly void ReplaceWorst(Point newPoint)
+        public readonly void ReplaceWorst(EvaluateableVector newPoint)
         {
-            _points[^1] = (Point)newPoint.Clone();
+            _points[^1] = (EvaluateableVector)newPoint.Clone();
         }
 
         public readonly void ReduceSimplex()
         {
-            var best = (Point)_points[0].Clone();
+            var best = (EvaluateableVector)GetBestInSorted.Clone();
             for (int i = 0; i < _points.Length; i++)
             {
                 _points[i] = best + (_points[i] - best) * _settings.Reduction;
             }
         }
 
-        public readonly Point[] ClonePoints()
+        public readonly EvaluateableVector[] ClonePoints()
         {
-            var points = new Point[_points.Length];
+            var points = new EvaluateableVector[_points.Length];
             for (int i = 0; i < _points.Length; i++)
             {
-                points[i] = (Point)_points[i].Clone();
+                points[i] = (EvaluateableVector)_points[i].Clone();
             }
             return points;
         }

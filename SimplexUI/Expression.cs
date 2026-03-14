@@ -1,20 +1,21 @@
 namespace SimplexUI
 {
-    struct Sign(char value, int priority)
-    {
-        public char Value = value;
-        public int Priority = priority;
-    }
-
     public class Function
     {
+        struct Sign(char value, int priority)
+        {
+            public char Value = value;
+            public int Priority = priority;
+        }
+
         private List<Sign> SignsList { get; set; } = [];
         private Dictionary<char, Func<double, double, double>> BinaryFunctions { get; set; } = [];
         private Dictionary<string, Func<double, double>> UnaryFunctions { get; set; } = [];
         private string Expression { get; set; }
         public bool IsCorrect { get; set; }
         private string[] PostfixExpression { get; set; } = [];
-        
+        private static HashSet<string> ValidFunctions => ["sin", "cos", "tan", "log", "sqrt", "abs", "exp"];
+
         public Function(string input)
         {
             Initialize();
@@ -55,11 +56,14 @@ namespace SimplexUI
             };
         }
 
+        /// <summary>
+        /// Блять почему если я меняю "?" на '?' все нахуй ломается
+        /// </summary>
         private void PostfixParse()
         {
             int signStackTop = -1, argumentFlag = 0, priorityCorrector = 0;
             List<Sign> signStack = [];
-            string notParsedExpression = "";
+            string notParsedExpression = string.Empty;
 
             Expression = Expression.Replace(" ", "");
             Expression = Expression.ToLower();
@@ -70,24 +74,20 @@ namespace SimplexUI
                 {
                     priorityCorrector += 10;
                 }
-
                 else if (Expression[i] == ')')
                 {
                     priorityCorrector -= 10;
                 }
-
                 else if(Expression[i] == '[')
                 {
                     argumentFlag++;
                     notParsedExpression += Expression[i];
                 }
-
                 else if (Expression[i] == ']')
                 {
                     argumentFlag--;
                     notParsedExpression += Expression[i];
                 }
-
                 else if (argumentFlag < 1 && CheckSignOrNot(Expression[i], priorityCorrector, out Sign currentSign))
                 {
                     if (currentSign.Value == '-' && (i == 0 || Expression[i - 1] == '(' || Expression[i - 1] == '['))
@@ -114,7 +114,6 @@ namespace SimplexUI
                     signStack.Add(currentSign);
                     signStackTop++;
                 }
-
                 else
                 {
                     notParsedExpression += Expression[i];
@@ -150,7 +149,6 @@ namespace SimplexUI
                 return false;
             }
 
-            HashSet<string> validFunctions = ["sin", "cos", "tan", "log", "sqrt", "abs", "exp"];
             int indexCorrector = 0;
             double[] calculatingExpression = new double[PostfixExpression.Length];
             result = double.NaN;
@@ -180,7 +178,7 @@ namespace SimplexUI
                     continue;
                 }
 
-                if (PostfixExpression[i].Contains('[') && validFunctions.Contains(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')]))
+                if (PostfixExpression[i].Contains('[') && ValidFunctions.Contains(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')]))
                 {
                     string arg = PostfixExpression[i].Substring(PostfixExpression[i].IndexOf('[') + 1, PostfixExpression[i].LastIndexOf(']') - PostfixExpression[i].IndexOf('[') - 1);
                     var argument = new Function(arg);

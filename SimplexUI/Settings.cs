@@ -1,39 +1,38 @@
 ﻿namespace SimplexUI
 {
-    public struct Settings
+    public readonly struct Settings
     {
-        public double Step { get; set; }
-        public int MaxIterations { get; set; }
-        public double Reflection { get; set; }
-        public double Compression { get; set; }
-        public double Stretching { get; set; }
-        public double Reduction { get; set; }
+        public readonly int MaxIterations { get; }
+        public readonly double Reflection { get; }
+        public readonly double Compression { get; }
+        public readonly double Stretching { get; }
+        public readonly double Reduction { get; }
 
+        /// <summary>
+        /// Default values:
+        /// <list type="bullet">
+        /// <item><see cref="MaxIterations"/> = 1</item>
+        /// <item><see cref="Reflection"/> = 1</item>
+        /// <item><see cref="Compression"/> = 0.5</item>
+        /// <item><see cref="Stretching"/> = 2</item>
+        /// <item><see cref="Reduction"/> = 0.5</item>
+        /// </list>
+        /// </summary>
         public Settings()
         {
+            MaxIterations = 1;
             Reflection = 1;
             Compression = 0.5;
             Stretching = 2;
             Reduction = 0.5;
         }
 
-        public Settings(double step, int maxIterations)
+        public Settings(int maxIterations, double reflection = 1, double compression = 0.5, double stretching = 2, double reduction = 0.5)
         {
-            Step = step;
-            MaxIterations = maxIterations;
-            Reflection = 1;
-            Stretching = 0.5;
-            Compression = 2;
-            Reduction = 0.5;
-        }
-
-        public Settings(double step, int maxIterations, double reflection, double stretching, double compression, double reduction)
-        {
-            Step = step;
             MaxIterations = maxIterations;
             Reflection = reflection;
-            Stretching = stretching;
             Compression = compression;
+            Stretching = stretching;
             Reduction = reduction;
         }
     }

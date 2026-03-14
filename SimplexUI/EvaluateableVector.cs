@@ -1,12 +1,12 @@
 ﻿namespace SimplexUI
 {
-    public readonly struct Point : IComparable<Point>, ICloneable
+    public readonly struct EvaluateableVector : IComparable<EvaluateableVector>, ICloneable
     {
         public readonly double[] Coordinates { get; }
         public readonly Func<double[], double> Function { get; }
         public double Value { get; }
 
-        public Point(double[] coordinates, Func<double[], double> function)
+        public EvaluateableVector(double[] coordinates, Func<double[], double> function)
         {
             Coordinates = new double[coordinates.Length];
             Array.Copy(coordinates, Coordinates, Coordinates.Length);
@@ -17,7 +17,7 @@
 
         public override bool Equals(object? obj)
         {
-            if (obj is not Point other)
+            if (obj is not EvaluateableVector other)
             {
                 return false;
             }
@@ -45,7 +45,7 @@
             }
         }
 
-        public int CompareTo(Point other)
+        public int CompareTo(EvaluateableVector other)
         {
             return Value.CompareTo(other.Value);
         }
@@ -56,18 +56,23 @@
 
             for (int i = 0; i < Coordinates.Length; i++)
             {
-                coordinates += $"{Coordinates[i]} ";
+                coordinates += $"{Coordinates[i]}";
+
+                if (i < Coordinates.Length - 1)
+                {
+                    coordinates += ", ";
+                }
             }
 
-            return $"{coordinates} {Value}";
+            return $"[{coordinates}] {Value}";
         }
         
         public object Clone()
         {
-            return new Point(Coordinates, Function);
+            return new EvaluateableVector(Coordinates, Function);
         }
 
-        private static void CheckForException(Point left, Point right)
+        private static void CheckForException(EvaluateableVector left, EvaluateableVector right)
         {
             if (left.Function != right.Function)
             {
@@ -79,7 +84,7 @@
             }
         }
 
-        public static Point operator +(Point left, Point right)
+        public static EvaluateableVector operator +(EvaluateableVector left, EvaluateableVector right)
         {
             CheckForException(left, right);
 
@@ -89,10 +94,10 @@
                 coordinates[i] = left.Coordinates[i] + right.Coordinates[i];
             }
 
-            return new Point(coordinates, left.Function);
+            return new EvaluateableVector(coordinates, left.Function);
         }
 
-        public static Point operator -(Point left, Point right)
+        public static EvaluateableVector operator -(EvaluateableVector left, EvaluateableVector right)
         {
             CheckForException(left, right);
 
@@ -102,67 +107,67 @@
                 coordinates[i] = left.Coordinates[i] - right.Coordinates[i];
             }
 
-            return new Point(coordinates, left.Function);
+            return new EvaluateableVector(coordinates, left.Function);
         }
 
-        public static Point operator *(Point left, double right)
+        public static EvaluateableVector operator *(EvaluateableVector left, double multiplyer)
         {
             double[] coordinates = new double[left.Coordinates.Length];
             for (int i = 0; i < coordinates.Length; i++)
             {
-                coordinates[i] = left.Coordinates[i] * right;
+                coordinates[i] = left.Coordinates[i] * multiplyer;
             }
 
-            return new Point(coordinates, left.Function);
+            return new EvaluateableVector(coordinates, left.Function);
         }
 
-        public static Point operator /(Point left, double right)
+        public static EvaluateableVector operator /(EvaluateableVector left, double dividor)
         {
             double[] coordinates = new double[left.Coordinates.Length];
             for (int i = 0; i < coordinates.Length; i++)
             {
-                coordinates[i] = left.Coordinates[i] / right;
+                coordinates[i] = left.Coordinates[i] / dividor;
             }
 
-            return new Point(coordinates, left.Function);
+            return new EvaluateableVector(coordinates, left.Function);
         }
 
-        public static bool operator <(Point left, Point right)
+        public static bool operator <(EvaluateableVector left, EvaluateableVector right)
         {
             CheckForException(left, right);
 
             return left.Value < right.Value;
         }
 
-        public static bool operator <=(Point left, Point right)
+        public static bool operator <=(EvaluateableVector left, EvaluateableVector right)
         {
             CheckForException(left, right);
 
             return left.Value <= right.Value;
         }
 
-        public static bool operator >(Point left, Point right)
+        public static bool operator >(EvaluateableVector left, EvaluateableVector right)
         {
             CheckForException(left, right);
 
             return left.Value > right.Value;
         }
 
-        public static bool operator >=(Point left, Point right)
+        public static bool operator >=(EvaluateableVector left, EvaluateableVector right)
         {
             CheckForException(left, right);
 
             return left.Value >= right.Value;
         }
 
-        public static bool operator ==(Point left, Point right)
+        public static bool operator ==(EvaluateableVector left, EvaluateableVector right)
         {
             CheckForException(left, right);
 
             return left.Value == right.Value;
         }
 
-        public static bool operator !=(Point left, Point right)
+        public static bool operator !=(EvaluateableVector left, EvaluateableVector right)
         {
             return !(left.Value == right.Value);
         }
