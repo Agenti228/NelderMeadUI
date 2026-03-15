@@ -15,7 +15,7 @@ namespace SimplexUI
         private bool _movingScreen = false;
         private readonly List<EvaluateableVector[]> _simplexes = [];
         private Function _function;
-        private const int _maxScale = int.MaxValue;
+        private const int _maxScale = 5000000;
         private const int _minScale = 1;
 
         public FormSimplexUI()
@@ -278,7 +278,7 @@ namespace SimplexUI
         {
             _simplexes.Clear();
 
-            var initialVector = new EvaluateableVector([10], function);
+            var initialVector = new EvaluateableVector([10], OneDimentionalFunction);
             double edgeLength = 2;
             var initialConditions = new InitialConditions(initialVector, edgeLength);
 
@@ -287,15 +287,22 @@ namespace SimplexUI
 
             var simplex = new Simplex(settings, initialConditions);
 
-            for (int r = 0; r < settings.MaxIterations; r++)
+            for (int i = 0; i < settings.MaxIterations; i++)
             {
-                simplex.Iteration();
                 _simplexes.Add(simplex.ClonePoints());
-                Console.WriteLine(simplex.GetBestInSorted);
-                _ = listBoxIterations.Items.Add($"Iteration {r + 1}: {simplex.GetBestInSorted}");
+                AddBestVectorOnIteration(i); //do something with double sorting
+
+                simplex.Iteration(); //also sorts _points
+
             }
 
-            double function(double[] point)
+            void AddBestVectorOnIteration(int iteration)
+            {
+                simplex.SortPoints();
+                _ = listBoxIterations.Items.Add($"Iteration {iteration + 1}: {simplex.GetBestInSorted}");
+            }
+
+            double OneDimentionalFunction(double[] point)
             {
                 _ = _function.TryCalculate(point[0], out double result);
                 return result;
