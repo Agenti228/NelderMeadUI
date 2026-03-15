@@ -1,10 +1,10 @@
 ﻿namespace SimplexUI
 {
-    public readonly struct EvaluateableVector : IComparable<EvaluateableVector>, ICloneable
+    public struct EvaluateableVector : IComparable<EvaluateableVector>, ICloneable
     {
         public readonly double[] Coordinates { get; }
         public readonly Func<double[], double> Function { get; }
-        public double Value { get; }
+        public double Value { get; set; }
 
         public EvaluateableVector(double[] coordinates, Func<double[], double> function)
         {
@@ -15,7 +15,7 @@
             Value = Function(Coordinates);
         }
 
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (obj is not EvaluateableVector other)
             {
@@ -30,7 +30,7 @@
             return Coordinates.SequenceEqual(other.Coordinates);
         }
 
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {
@@ -45,7 +45,7 @@
             }
         }
 
-        public int CompareTo(EvaluateableVector other)
+        public readonly int CompareTo(EvaluateableVector other)
         {
             return Value.CompareTo(other.Value);
         }
@@ -67,7 +67,7 @@
             return $"[{coordinates}] {Value}";
         }
         
-        public object Clone()
+        public readonly object Clone()
         {
             return new EvaluateableVector(Coordinates, Function);
         }
@@ -174,13 +174,14 @@
 
         public double this[int index]
         {
-            get
+            readonly get
             {
                 return Coordinates[index];
             }
             set
             {
                 Coordinates[index] = value;
+                Value = Function(Coordinates);
             }
         }
     }

@@ -1,19 +1,52 @@
 ﻿namespace SimplexUI
 {
-    public readonly struct Simplex
+    public struct Simplex
     {
         /// <summary>
         /// Simplex points MUST be sorted before calling this
         /// </summary>
-        public readonly EvaluateableVector GetBestInSorted => _points[0];
+        public readonly EvaluateableVector GetBestInSorted
+        {
+            get
+            {
+                if (!_pointsSorted)
+                {
+                    throw new Exception("Points array MUST be sorted");
+                }
+
+                return _points[0];
+            }
+        }
         /// <summary>
         /// <inheritdoc cref="GetBestInSorted"/>
         /// </summary>
-        public readonly EvaluateableVector GetSecondBestInSorted => _points[1];
+        public readonly EvaluateableVector GetSecondBestInSorted
+        {
+            get
+            {
+                if (!_pointsSorted)
+                {
+                    throw new Exception("Points array is not sorted");
+                }
+
+                return _points[1];
+            }
+        }
         /// <summary>
         /// <inheritdoc cref="GetBestInSorted"/>
         /// </summary>
-        public readonly EvaluateableVector GetWorstInSorted => _points[^1];
+        public readonly EvaluateableVector GetWorstInSorted
+        {
+            get
+            {
+                if (!_pointsSorted)
+                {
+                    throw new Exception("Points array is not sorted");
+                }
+
+                return _points[^1];
+            }
+        }
         /// <summary>
         /// <inheritdoc cref="GetBestInSorted"/>
         /// </summary>
@@ -21,6 +54,11 @@
         {
             get
             {
+                if (!_pointsSorted)
+                {
+                    throw new Exception("Points array is not sorted");
+                }
+
                 var center = new EvaluateableVector(new double[_initialConditions.SimplexDimention - 1], _initialConditions.VectorFunction);
 
                 for (int i = 0; i < _points.Length - 1; i++)
@@ -35,6 +73,7 @@
         private readonly Settings _settings = new();
         private readonly InitialConditions _initialConditions = new();
         private readonly EvaluateableVector[] _points;
+        private bool _pointsSorted = false;
 
         public Simplex(Settings settings, InitialConditions initialConditions)
         {
@@ -45,7 +84,7 @@
             Array.Copy(initialConditions.InitialVectors, _points, _points.Length);
         }
 
-        public readonly void Iteration()
+        public void Iteration()
         {
             SortPoints();
 
@@ -99,11 +138,14 @@
                     }
                 }
             }
+
+            _pointsSorted = false;
         }
 
-        public readonly void SortPoints()
+        public void SortPoints()
         {
             Array.Sort(_points);
+            _pointsSorted = true;
         }
 
         public readonly EvaluateableVector Reflect(EvaluateableVector reflectedPoint, EvaluateableVector reflectionPoint)
