@@ -8,10 +8,13 @@ namespace SimplexUI
     /// Представляет математическую функцию от одной переменной x.
     /// Поддерживает операции +, -, *, /, ^, скобки (), унарный минус,
     /// а также функции: sin, cos, tan, log, sqrt, abs, exp.
-    /// Выражение может содержать пробелы.
     /// </summary>
     public class Function
     {
+        /// <summary>
+        /// Проверяет, является ли символ бинарным оператором (не скобкой)
+        /// </summary>
+        private static bool IsOperator(char ch) => OperatorPriority.ContainsKey(ch) && ch != '(' && ch != ')';
         private static readonly Dictionary<char, int> OperatorPriority = new()
         {
             { '+', 1 },
@@ -42,43 +45,27 @@ namespace SimplexUI
             { "abs", Math.Abs },
             { "exp", Math.Exp }
         };
-        /// <summary>
-        /// 
-        /// </summary>
-        private readonly string _infixExpression;
 
+        private readonly string _infixExpression;
         private string[] _postfixTokens;
 
-        /// <summary>
-        /// Признак корректности выражения.
-        /// true, если выражение успешно разобрано и может быть вычислено.
-        /// </summary>
         public bool IsCorrect { get; private set; }
 
-        /// <summary>
-        /// Создаёт функцию по заданному строковому выражению.
-        /// </summary>
-        /// <param name="input">Строка с математическим выражением (переменная обозначается буквой 'x')</param>
-        public Function(string input)
+        public Function(string input)//Андрей, почини пж
         {
             _infixExpression = input.Replace(" ", "").ToLower();
             ParseToPostfix();
         }
-        /// <summary>
-        /// Проверяет, является ли символ бинарным оператором.
-        /// </summary>
-        private static bool IsOperator(char ch) => OperatorPriority.ContainsKey(ch) && ch != '(' && ch != ')';
 
         /// <summary>
-        /// Преобразует инфиксное выражение в постфиксную запись (алгоритм сортировочной станции).
-        /// Результат сохраняется в _postfixTokens в виде массива токенов.
+        /// Преобразование инфиксного выражения в постфиксную запись (алгоритм сортировочной станции)
         /// </summary>
         private void ParseToPostfix()
         {
             var output = new StringBuilder();
             var operatorStack = new Stack<char>();
             int parenthesesDepth = 0;
-            int bracketDepth = 0;                      
+            int bracketDepth = 0;
 
             for (int i = 0; i < _infixExpression.Length; i++)
             {
@@ -117,7 +104,6 @@ namespace SimplexUI
                     }
 
                     output.Append('?');
-
                     int currentPriority = OperatorPriority[ch] + parenthesesDepth;
 
                     while (operatorStack.Count > 0 && operatorStack.Peek() != '(' &&
@@ -125,7 +111,6 @@ namespace SimplexUI
                     {
                         output.Append('?').Append(operatorStack.Pop());
                     }
-
                     operatorStack.Push(ch);
                 }
                 else
@@ -153,11 +138,8 @@ namespace SimplexUI
         }
 
         /// <summary>
-        /// Пытается вычислить значение функции при заданном x.
+        /// Публичный метод вычисления значения функции при заданном x
         /// </summary>
-        /// <param name="x">Значение переменной</param>
-        /// <param name="result">Результат вычисления (double.NaN при ошибке)</param>
-        /// <returns>true, если вычисление успешно, иначе false</returns>
         public bool TryCalculate(double x, out double result)
         {
             if (!IsCorrect)
@@ -169,7 +151,7 @@ namespace SimplexUI
         }
 
         /// <summary>
-        /// Внутренний метод вычисления по постфиксной записи с использованием стека значений.
+        /// Внутренний метод вычисления по постфиксной записи
         /// </summary>
         private bool TryCalculateInternal(double x, out double result)
         {
@@ -177,69 +159,68 @@ namespace SimplexUI
 
             foreach (string token in _postfixTokens)
             {
-                // Если токен - число
-                if (double.TryParse(token, out double number))
+                if (IsNumber(token, out double number))
                 {
                     stack.Push(number);
+                    continue;
                 }
-                // Если токен - бинарный оператор
-                else if (token.Length == 1 && BinaryOps.ContainsKey(token[0]))
+
+                if (token == "x")
+                {
+                    stack.Push(x);
+                    continue;
+                }
+
+                if (token.Length == 1 && BinaryOps.ContainsKey(token[0]))
                 {
                     if (stack.Count < 2)
                     {
                         result = double.NaN;
                         return false;
                     }
+
                     double b = stack.Pop();
                     double a = stack.Pop();
-                    try
-                    {
-                        double value = BinaryOps[token[0]](a, b);
-                        stack.Push(value);
-                    }
-                    catch
+                    char op = token[0];
+
+                    if (op == '/' && Math.Abs(b) == 0)
                     {
                         result = double.NaN;
                         return false;
                     }
+
+                    double value = BinaryOps[op](a, b);
+                    stack.Push(value);
+                    continue;
                 }
-                // Если токен - переменная 'x'
-                else if (token == "x")
-                {
-                    stack.Push(x);
-                }
-                else if (token.Contains('[') && token.EndsWith(']'))
+
+                if (token.Contains('[') && token.EndsWith(']'))
                 {
                     int openBracket = token.IndexOf('[');
                     string funcName = token.Substring(0, openBracket);
+
                     if (!UnaryOps.ContainsKey(funcName))
                     {
                         result = double.NaN;
                         return false;
                     }
+
                     string argExpr = token.Substring(openBracket + 1, token.Length - openBracket - 2);
                     var innerFunc = new Function(argExpr);
+
                     if (!innerFunc.TryCalculate(x, out double argValue))
                     {
                         result = double.NaN;
                         return false;
                     }
-                    try
-                    {
-                        double value = UnaryOps[funcName](argValue);
-                        stack.Push(value);
-                    }
-                    catch
-                    {
-                        result = double.NaN;
-                        return false;
-                    }
+
+                    double funcResult = UnaryOps[funcName](argValue);
+                    stack.Push(funcResult);
+                    continue;
                 }
-                else
-                {
-                    result = double.NaN;
-                    return false;
-                }
+
+                result = double.NaN;
+                return false;
             }
 
             if (stack.Count != 1)
@@ -249,6 +230,65 @@ namespace SimplexUI
             }
 
             result = stack.Pop();
+            return true;
+        }
+
+        /// <summary>
+        /// Проверяет, является ли строка корректным числом
+        /// </summary>
+        private static bool IsNumber(string token, out double value)
+        {
+            value = 0;
+            if (string.IsNullOrEmpty(token))
+                return false;
+
+            int start = 0;
+            bool hasMinus = false;
+
+            if (token[0] == '-')
+            {
+                if (token.Length == 1)
+                    return false;
+                start = 1;
+                hasMinus = true;
+            }
+
+            bool hasDecimalPoint = false;
+            int integerPart = 0;
+            double fractionalPart = 0;
+            int fractionalDigits = 0;
+
+            for (int i = start; i < token.Length; i++)
+            {
+                char c = token[i];
+
+                if (c == '.')
+                {
+                    if (hasDecimalPoint)
+                        return false;
+                    hasDecimalPoint = true;
+                    continue;
+                }
+
+                if (c < '0' || c > '9')
+                    return false;
+
+                if (!hasDecimalPoint)
+                {
+                    integerPart = integerPart * 10 + (c - '0');
+                }
+                else
+                {
+                    fractionalPart = fractionalPart * 10 + (c - '0');
+                    fractionalDigits++;
+                }
+            }
+
+            double result = integerPart + fractionalPart / Math.Pow(10, fractionalDigits);
+            if (hasMinus)
+                result = -result;
+
+            value = result;
             return true;
         }
     }
