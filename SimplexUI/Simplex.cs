@@ -1,87 +1,93 @@
-﻿namespace SimplexUI
+﻿using SimplexUI.Exceptions;
+
+namespace SimplexUI
 {
     public struct Simplex
     {
         /// <summary>
         /// Simplex points MUST be sorted before calling this
         /// </summary>
+        /// <exception cref="UnsortedArrayException"></exception>
         public readonly EvaluateableVector GetBestInSorted
         {
             get
             {
-                if (!_pointsSorted)
+                if (!_vectorsSorted)
                 {
-                    throw new Exception("Points array MUST be sorted");
+                    throw new UnsortedArrayException("Can't get best point in unsorted array");
                 }
 
-                return _points[0];
+                return _vectors[0];
             }
         }
         /// <summary>
         /// <inheritdoc cref="GetBestInSorted"/>
         /// </summary>
+        /// <exception cref="UnsortedArrayException"></exception>
         public readonly EvaluateableVector GetSecondBestInSorted
         {
             get
             {
-                if (!_pointsSorted)
+                if (!_vectorsSorted)
                 {
-                    throw new Exception("Points array is not sorted");
+                    throw new UnsortedArrayException("Can't get second best point in unsorted array");
                 }
 
-                return _points[1];
+                return _vectors[1];
             }
         }
         /// <summary>
         /// <inheritdoc cref="GetBestInSorted"/>
         /// </summary>
+        /// <exception cref="UnsortedArrayException"></exception>
         public readonly EvaluateableVector GetWorstInSorted
         {
             get
             {
-                if (!_pointsSorted)
+                if (!_vectorsSorted)
                 {
-                    throw new Exception("Points array is not sorted");
+                    throw new UnsortedArrayException("Can't get worst point in unsorted array");
                 }
 
-                return _points[^1];
+                return _vectors[^1];
             }
         }
         /// <summary>
         /// <inheritdoc cref="GetBestInSorted"/>
         /// </summary>
+        /// <exception cref="UnsortedArrayException"></exception>
         public readonly EvaluateableVector GetCenterInSorted 
         {
             get
             {
-                if (!_pointsSorted)
+                if (!_vectorsSorted)
                 {
-                    throw new Exception("Points array is not sorted");
+                    throw new UnsortedArrayException("Can't get center point in unsorted array");
                 }
 
                 var center = new EvaluateableVector(new double[_initialConditions.SimplexDimention - 1], _initialConditions.VectorFunction);
 
-                for (int i = 0; i < _points.Length - 1; i++)
+                for (int i = 0; i < _vectors.Length - 1; i++)
                 {
-                    center += _points[i];
+                    center += _vectors[i];
                 }
 
-                return center / (_points.Length - 1);
+                return center / (_vectors.Length - 1);
             } 
         }
 
         private readonly Settings _settings = new();
         private readonly InitialConditions _initialConditions = new();
-        private readonly EvaluateableVector[] _points;
-        private bool _pointsSorted = false;
+        private readonly EvaluateableVector[] _vectors;
+        private bool _vectorsSorted = false;
 
         public Simplex(Settings settings, InitialConditions initialConditions)
         {
             _settings = settings;
             _initialConditions = initialConditions;
 
-            _points = new EvaluateableVector[initialConditions.SimplexDimention];
-            Array.Copy(initialConditions.InitialVectors, _points, _points.Length);
+            _vectors = new EvaluateableVector[initialConditions.SimplexDimention];
+            Array.Copy(initialConditions.InitialVectors, _vectors, _vectors.Length);
         }
 
         public void Iteration()
@@ -139,13 +145,13 @@
                 }
             }
 
-            _pointsSorted = false;
+            _vectorsSorted = false;
         }
 
         public void SortPoints()
         {
-            Array.Sort(_points);
-            _pointsSorted = true;
+            Array.Sort(_vectors);
+            _vectorsSorted = true;
         }
 
         public readonly EvaluateableVector Reflect(EvaluateableVector reflectedPoint, EvaluateableVector reflectionPoint)
@@ -170,24 +176,24 @@
 
         public readonly void ReplaceWorst(EvaluateableVector newPoint)
         {
-            _points[^1] = (EvaluateableVector)newPoint.Clone();
+            _vectors[^1] = (EvaluateableVector)newPoint.Clone();
         }
 
         public readonly void ReduceSimplex()
         {
             var best = (EvaluateableVector)GetBestInSorted.Clone();
-            for (int i = 0; i < _points.Length; i++)
+            for (int i = 0; i < _vectors.Length; i++)
             {
-                _points[i] = best + (_points[i] - best) * _settings.Reduction;
+                _vectors[i] = best + (_vectors[i] - best) * _settings.Reduction;
             }
         }
 
         public readonly EvaluateableVector[] ClonePoints()
         {
-            var points = new EvaluateableVector[_points.Length];
-            for (int i = 0; i < _points.Length; i++)
+            var points = new EvaluateableVector[_vectors.Length];
+            for (int i = 0; i < _vectors.Length; i++)
             {
-                points[i] = (EvaluateableVector)_points[i].Clone();
+                points[i] = (EvaluateableVector)_vectors[i].Clone();
             }
             return points;
         }

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace SimplexUI
@@ -14,8 +12,8 @@ namespace SimplexUI
         /// <summary>
         /// Проверяет, является ли символ бинарным оператором (не скобкой)
         /// </summary>
-        private static bool IsOperator(char ch) => OperatorPriority.ContainsKey(ch) && ch != '(' && ch != ')';
-        private static readonly Dictionary<char, int> OperatorPriority = new()
+        private static bool IsOperator(char ch) => _operatorPriority.ContainsKey(ch) && ch != '(' && ch != ')';
+        private static readonly Dictionary<char, int> _operatorPriority = new()
         {
             { '+', 1 },
             { '-', 1 },
@@ -26,7 +24,7 @@ namespace SimplexUI
             { ')', 0 }
         };
 
-        private static readonly Dictionary<char, Func<double, double, double>> BinaryOps = new()
+        private static readonly Dictionary<char, Func<double, double, double>> _binaryOperations = new()
         {
             { '+', (a, b) => a + b },
             { '-', (a, b) => a - b },
@@ -35,7 +33,7 @@ namespace SimplexUI
             { '^', Math.Pow }
         };
 
-        private static readonly Dictionary<string, Func<double, double>> UnaryOps = new()
+        private static readonly Dictionary<string, Func<double, double>> _unaryOperations = new()
         {
             { "sin", Math.Sin },
             { "cos", Math.Cos },
@@ -47,11 +45,11 @@ namespace SimplexUI
         };
 
         private readonly string _infixExpression;
-        private string[] _postfixTokens;
+        private string[] _postfixTokens = []; //Андрей, почини пж. Check if it has some strange interractions
 
         public bool IsCorrect { get; private set; }
 
-        public Function(string input)//Андрей, почини пж
+        public Function(string input)
         {
             _infixExpression = input.Replace(" ", "").ToLower();
             ParseToPostfix();
@@ -81,47 +79,49 @@ namespace SimplexUI
                     parenthesesDepth -= 10;
                     while (operatorStack.Count > 0 && operatorStack.Peek() != '(')
                     {
-                        output.Append('?').Append(operatorStack.Pop());
+                        _ = output.Append('?').Append(operatorStack.Pop());
                     }
                     if (operatorStack.Count > 0 && operatorStack.Peek() == '(')
-                        operatorStack.Pop();
+                    {
+                        _ = operatorStack.Pop();
+                    }
                 }
                 else if (ch == '[')
                 {
                     bracketDepth++;
-                    output.Append(ch);
+                    _ = output.Append(ch);
                 }
                 else if (ch == ']')
                 {
                     bracketDepth--;
-                    output.Append(ch);
+                    _ = output.Append(ch);
                 }
                 else if (bracketDepth == 0 && IsOperator(ch))
                 {
                     if (ch == '-' && (i == 0 || _infixExpression[i - 1] == '(' || _infixExpression[i - 1] == '['))
                     {
-                        output.Append('0');
+                        _ = output.Append('0');
                     }
 
-                    output.Append('?');
-                    int currentPriority = OperatorPriority[ch] + parenthesesDepth;
+                    _ = output.Append('?');
+                    int currentPriority = _operatorPriority[ch] + parenthesesDepth;
 
                     while (operatorStack.Count > 0 && operatorStack.Peek() != '(' &&
-                           OperatorPriority[operatorStack.Peek()] + parenthesesDepth >= currentPriority)
+                           _operatorPriority[operatorStack.Peek()] + parenthesesDepth >= currentPriority)
                     {
-                        output.Append('?').Append(operatorStack.Pop());
+                        _ = output.Append('?').Append(operatorStack.Pop());
                     }
                     operatorStack.Push(ch);
                 }
                 else
                 {
-                    output.Append(ch);
+                    _ = output.Append(ch);
                 }
             }
 
             while (operatorStack.Count > 0)
             {
-                output.Append('?').Append(operatorStack.Pop());
+                _ = output.Append('?').Append(operatorStack.Pop());
             }
 
             string postfixString = output.ToString();
@@ -147,6 +147,7 @@ namespace SimplexUI
                 result = double.NaN;
                 return false;
             }
+
             return TryCalculateInternal(x, out result);
         }
 
@@ -171,7 +172,7 @@ namespace SimplexUI
                     continue;
                 }
 
-                if (token.Length == 1 && BinaryOps.ContainsKey(token[0]))
+                if (token.Length == 1 && _binaryOperations.ContainsKey(token[0]))
                 {
                     if (stack.Count < 2)
                     {
@@ -189,7 +190,7 @@ namespace SimplexUI
                         return false;
                     }
 
-                    double value = BinaryOps[op](a, b);
+                    double value = _binaryOperations[op](a, b);
                     stack.Push(value);
                     continue;
                 }
@@ -197,9 +198,9 @@ namespace SimplexUI
                 if (token.Contains('[') && token.EndsWith(']'))
                 {
                     int openBracket = token.IndexOf('[');
-                    string funcName = token.Substring(0, openBracket);
+                    string funcName = token[..openBracket];
 
-                    if (!UnaryOps.ContainsKey(funcName))
+                    if (!_unaryOperations.TryGetValue(funcName, out Func<double, double>? value))
                     {
                         result = double.NaN;
                         return false;
@@ -214,7 +215,7 @@ namespace SimplexUI
                         return false;
                     }
 
-                    double funcResult = UnaryOps[funcName](argValue);
+                    double funcResult = value(argValue);
                     stack.Push(funcResult);
                     continue;
                 }
@@ -240,7 +241,9 @@ namespace SimplexUI
         {
             value = 0;
             if (string.IsNullOrEmpty(token))
+            {
                 return false;
+            }
 
             int start = 0;
             bool hasMinus = false;
@@ -248,7 +251,10 @@ namespace SimplexUI
             if (token[0] == '-')
             {
                 if (token.Length == 1)
+                {
                     return false;
+                }
+
                 start = 1;
                 hasMinus = true;
             }
@@ -265,13 +271,18 @@ namespace SimplexUI
                 if (c == '.')
                 {
                     if (hasDecimalPoint)
+                    {
                         return false;
+                    }
+
                     hasDecimalPoint = true;
                     continue;
                 }
 
                 if (c < '0' || c > '9')
+                {
                     return false;
+                }
 
                 if (!hasDecimalPoint)
                 {
@@ -286,7 +297,9 @@ namespace SimplexUI
 
             double result = integerPart + fractionalPart / Math.Pow(10, fractionalDigits);
             if (hasMinus)
+            {
                 result = -result;
+            }
 
             value = result;
             return true;

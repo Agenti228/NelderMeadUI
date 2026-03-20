@@ -1,4 +1,6 @@
-﻿namespace SimplexUI
+﻿using SimplexUI.Exceptions;
+
+namespace SimplexUI
 {
     public struct EvaluateableVector : IComparable<EvaluateableVector>, ICloneable
     {
@@ -76,11 +78,11 @@
         {
             if (left.Function != right.Function)
             {
-                throw new Exception("Left and right part have different pointers to functions");
+                throw new MismatchingFunctionsException("Left and right part have different pointers to functions");
             }
             else if (left.Coordinates.Length != right.Coordinates.Length)
             {
-                throw new Exception("Left and right part have different dimentions");
+                throw new MismatchingDimentionsException("Left and right part have different dimentions");
             }
         }
 

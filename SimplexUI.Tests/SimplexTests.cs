@@ -156,8 +156,7 @@ namespace SimplexUI.Tests
             var point1 = new EvaluateableVector([1], x => x[0]);
             var point2 = new EvaluateableVector([2], x => x[0] * 2); // другая функция
 
-            var ex = Assert.Throws<Exception>(() => simplex.Reflect(point1, point2));
-
+            var ex = Assert.Throws<Exceptions.MismatchingFunctionsException>(() => simplex.Reflect(point1, point2));
             Assert.Equal("Left and right part have different pointers to functions", ex.Message);
         }
 
