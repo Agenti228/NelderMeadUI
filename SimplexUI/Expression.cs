@@ -109,7 +109,7 @@ namespace SimplexUI
                     while (operatorStack.Count > 0 && operatorStack.Peek() != '(' &&
                            _operatorPriority[operatorStack.Peek()] + parenthesesDepth >= currentPriority)
                     {
-                        _ = output.Append('?').Append(operatorStack.Pop());
+                        _ = output.Append(operatorStack.Pop()).Append('?');
                     }
                     operatorStack.Push(ch);
                 }
@@ -158,17 +158,13 @@ namespace SimplexUI
         {
             var stack = new Stack<double>();
 
+            List<string> variables = [];
+
             foreach (string token in _postfixTokens)
             {
                 if (IsNumber(token, out double number))
                 {
                     stack.Push(number);
-                    continue;
-                }
-
-                if (token == "x")
-                {
-                    stack.Push(x);
                     continue;
                 }
 
@@ -183,12 +179,6 @@ namespace SimplexUI
                     double b = stack.Pop();
                     double a = stack.Pop();
                     char op = token[0];
-
-                    if (op == '/' && Math.Abs(b) == 0)
-                    {
-                        result = double.NaN;
-                        return false;
-                    }
 
                     double value = _binaryOperations[op](a, b);
                     stack.Push(value);
@@ -217,6 +207,12 @@ namespace SimplexUI
 
                     double funcResult = value(argValue);
                     stack.Push(funcResult);
+                    continue;
+                }
+
+                if (token == "x")
+                {
+                    stack.Push(x);
                     continue;
                 }
 
