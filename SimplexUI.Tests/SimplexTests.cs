@@ -1,8 +1,5 @@
 namespace SimplexUI.Tests
 {
-    /// <summary>
-    /// Блять ПЕРЕСИЧИТАТЬ значение для Assert
-    /// </summary>
     public class SimplexTests
     {
         const double _tolerance = 0.00000001;
