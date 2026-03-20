@@ -166,7 +166,7 @@ namespace SimplexUI.Tests
         public void Iteration_WhenReflectedIsBestAndExpandedBetter_ShouldReplaceWorstWithExpanded()
         {
             var settings = new Settings();
-            var initialConditions = new InitialConditions([[0.0, 0.0], [3.0, 0.0], [0.0, 4.0]], TestSumFunction);
+            var initialConditions = new InitialConditions([[0, 0], [3, 0], [0, 4]], TestSumFunction);
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
@@ -198,7 +198,7 @@ namespace SimplexUI.Tests
         public void Iteration_WhenReflectedIsBetweenBestAndSecondBest_ShouldReplaceWorstWithReflected()
         {
             var settings = new Settings();
-            var initialConditions = new InitialConditions([[2.0, 0.0], [4.0, 0.0], [5.0, 0.0]], TestPowFunction);
+            var initialConditions = new InitialConditions([[2, 0], [4, 0], [5, 0]], TestPowFunction);
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
@@ -214,7 +214,7 @@ namespace SimplexUI.Tests
         public void Iteration_WhenReflectedWorseThanSecondButBetterThanWorstAndOutsideContractionIsBetter_ShouldReplaceWorstWithContractedOutside()
         {
             var settings = new Settings();
-            var initialConditions = new InitialConditions([[2.0, 0.0], [3.2, 0.0], [5.0, 0.0]], TestPowFunction);
+            var initialConditions = new InitialConditions([[2, 0], [3.2, 0], [5, 0]], TestPowFunction);
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
