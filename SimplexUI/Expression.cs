@@ -1,139 +1,135 @@
+using System.Text;
+
 namespace SimplexUI
 {
+    /// <summary>
+    /// Представляет математическую функцию от одной переменной x.
+    /// Поддерживает операции +, -, *, /, ^, скобки (), унарный минус,
+    /// а также функции: sin, cos, tan, log, sqrt, abs, exp.
+    /// </summary>
     public class Function
     {
-        struct Sign(char value, int priority)
+        /// <summary>
+        /// Проверяет, является ли символ бинарным оператором (не скобкой)
+        /// </summary>
+        private static bool IsOperator(char ch) => _operatorPriority.ContainsKey(ch) && ch != '(' && ch != ')';
+        private static readonly Dictionary<char, int> _operatorPriority = new()
         {
-            public char Value = value;
-            public int Priority = priority;
-        }
+            { '+', 1 },
+            { '-', 1 },
+            { '*', 2 },
+            { '/', 2 },
+            { '^', 3 },
+            { '(', 0 },
+            { ')', 0 }
+        };
 
-        private List<Sign> SignsList { get; set; } = [];
-        private Dictionary<char, Func<double, double, double>> BinaryFunctions { get; set; } = [];
-        private Dictionary<string, Func<double, double>> UnaryFunctions { get; set; } = [];
-        private string Expression { get; set; }
-        public bool IsCorrect { get; set; }
-        private string[] PostfixExpression { get; set; } = [];
-        private static HashSet<string> ValidFunctions => ["sin", "cos", "tan", "log", "sqrt", "abs", "exp"];
+        private static readonly Dictionary<char, Func<double, double, double>> _binaryOperations = new()
+        {
+            { '+', (a, b) => a + b },
+            { '-', (a, b) => a - b },
+            { '*', (a, b) => a * b },
+            { '/', (a, b) => a / b },
+            { '^', Math.Pow }
+        };
+
+        private static readonly Dictionary<string, Func<double, double>> _unaryOperations = new()
+        {
+            { "sin", Math.Sin },
+            { "cos", Math.Cos },
+            { "tan", Math.Tan },
+            { "log", Math.Log },
+            { "sqrt", Math.Sqrt },
+            { "abs", Math.Abs },
+            { "exp", Math.Exp }
+        };
+
+        private readonly string _infixExpression;
+        private string[] _postfixTokens = []; //Андрей, почини пж. Check if it has some strange interractions
+
+        public bool IsCorrect { get; private set; }
 
         public Function(string input)
         {
-            Initialize();
-            Expression = input;
-            PostfixParse();
-        }
-
-        private void Initialize()
-        {
-            IsCorrect = true;
-            SignsList =
-            [
-                new Sign('+', 1),
-                new Sign('-', 1),
-                new Sign('*', 2),
-                new Sign('/', 2),
-                new Sign('^', 3),
-                new Sign('(', 0),
-                new Sign(')', 0)
-            ];
-            BinaryFunctions = new Dictionary<char, Func<double, double, double>>
-            {
-                { '+', (a, b) => a + b },
-                { '-', (a, b) => a - b },
-                { '*', (a, b) => a * b },
-                { '/', (a, b) => a / b },
-                { '^', Math.Pow }
-            };
-            UnaryFunctions = new Dictionary<string, Func<double, double>>
-            {
-                { "sin", Math.Sin },
-                { "cos", Math.Cos },
-                { "tan", Math.Tan },
-                { "log", Math.Log },
-                { "sqrt", Math.Sqrt },
-                { "abs", Math.Abs },
-                { "exp", Math.Exp }
-            };
+            _infixExpression = input.Replace(" ", "").ToLower();
+            ParseToPostfix();
         }
 
         /// <summary>
-        /// Блять почему если я меняю "?" на '?' все нахуй ломается
+        /// Преобразование инфиксного выражения в постфиксную запись (алгоритм сортировочной станции)
         /// </summary>
-        private void PostfixParse()
+        private void ParseToPostfix()
         {
-            int signStackTop = -1, argumentFlag = 0, priorityCorrector = 0;
-            List<Sign> signStack = [];
-            string notParsedExpression = string.Empty;
+            var output = new StringBuilder();
+            var operatorStack = new Stack<char>();
+            int parenthesesDepth = 0;
+            int bracketDepth = 0;
 
-            Expression = Expression.Replace(" ", "");
-            Expression = Expression.ToLower();
-
-            for (int i = 0; i < Expression.Length; i++)
+            for (int i = 0; i < _infixExpression.Length; i++)
             {
-                if (Expression[i] == '(')
+                char ch = _infixExpression[i];
+
+                if (ch == '(')
                 {
-                    priorityCorrector += 10;
+                    parenthesesDepth += 10;
+                    operatorStack.Push(ch);
                 }
-                else if (Expression[i] == ')')
+                else if (ch == ')')
                 {
-                    priorityCorrector -= 10;
-                }
-                else if(Expression[i] == '[')
-                {
-                    argumentFlag++;
-                    notParsedExpression += Expression[i];
-                }
-                else if (Expression[i] == ']')
-                {
-                    argumentFlag--;
-                    notParsedExpression += Expression[i];
-                }
-                else if (argumentFlag < 1 && CheckSignOrNot(Expression[i], priorityCorrector, out Sign currentSign))
-                {
-                    if (currentSign.Value == '-' && (i == 0 || Expression[i - 1] == '(' || Expression[i - 1] == '['))
+                    parenthesesDepth -= 10;
+                    while (operatorStack.Count > 0 && operatorStack.Peek() != '(')
                     {
-                        notParsedExpression += '0';
+                        _ = output.Append('?').Append(operatorStack.Pop());
+                    }
+                    if (operatorStack.Count > 0 && operatorStack.Peek() == '(')
+                    {
+                        _ = operatorStack.Pop();
+                    }
+                }
+                else if (ch == '[')
+                {
+                    bracketDepth++;
+                    _ = output.Append(ch);
+                }
+                else if (ch == ']')
+                {
+                    bracketDepth--;
+                    _ = output.Append(ch);
+                }
+                else if (bracketDepth == 0 && IsOperator(ch))
+                {
+                    if (ch == '-' && (i == 0 || _infixExpression[i - 1] == '(' || _infixExpression[i - 1] == '['))
+                    {
+                        _ = output.Append('0');
                     }
 
-                    notParsedExpression += "?";
+                    _ = output.Append('?');
+                    int currentPriority = _operatorPriority[ch] + parenthesesDepth;
 
-                    if (signStackTop == -1 || signStack[signStackTop].Priority < currentSign.Priority)
+                    while (operatorStack.Count > 0 && operatorStack.Peek() != '(' &&
+                           _operatorPriority[operatorStack.Peek()] + parenthesesDepth >= currentPriority)
                     {
-                        signStack.Add(currentSign);
-                        signStackTop++;
-                        continue;
+                        _ = output.Append(operatorStack.Pop()).Append('?');
                     }
-
-                    for (int j = signStackTop; j > -1; j--)
-                    {
-                        notParsedExpression += signStack[j].Value + "?";
-                        signStack.RemoveAt(j);
-                        signStackTop--;
-                    }
-
-                    signStack.Add(currentSign);
-                    signStackTop++;
+                    operatorStack.Push(ch);
                 }
                 else
                 {
-                    notParsedExpression += Expression[i];
+                    _ = output.Append(ch);
                 }
             }
 
-            if (signStackTop > -1)
+            while (operatorStack.Count > 0)
             {
-                for (int j = signStackTop; j > -1; j--)
-                {
-                    notParsedExpression += "?" + signStack[j].Value;
-                    signStack.RemoveAt(j);
-                    signStackTop--;
-                }
+                _ = output.Append('?').Append(operatorStack.Pop());
             }
 
-            PostfixExpression = notParsedExpression.Split('?');
-            if (argumentFlag == 0 && priorityCorrector == 0)
+            string postfixString = output.ToString();
+            _postfixTokens = postfixString.Split('?', StringSplitOptions.RemoveEmptyEntries);
+
+            if (parenthesesDepth == 0 && bracketDepth == 0)
             {
-                IsCorrect = TryCalculate(0, out _);
+                IsCorrect = TryCalculateInternal(0, out _);
             }
             else
             {
@@ -141,6 +137,9 @@ namespace SimplexUI
             }
         }
 
+        /// <summary>
+        /// Публичный метод вычисления значения функции при заданном x
+        /// </summary>
         public bool TryCalculate(double x, out double result)
         {
             if (!IsCorrect)
@@ -149,86 +148,157 @@ namespace SimplexUI
                 return false;
             }
 
-            int indexCorrector = 0;
-            double[] calculatingExpression = new double[PostfixExpression.Length];
-            result = double.NaN;
+            return TryCalculateInternal(x, out result);
+        }
 
-            for (int i = 0; i < PostfixExpression.Length; i++)
+        /// <summary>
+        /// Внутренний метод вычисления по постфиксной записи
+        /// </summary>
+        private bool TryCalculateInternal(double x, out double result)
+        {
+            var stack = new Stack<double>();
+
+            List<string> variables = [];
+
+            foreach (string token in _postfixTokens)
             {
-                if (double.TryParse(PostfixExpression[i], out calculatingExpression[i + indexCorrector]))
+                if (IsNumber(token, out double number))
                 {
+                    stack.Push(number);
                     continue;
                 }
 
-                if (CheckSignOrNot(PostfixExpression[i], 0, out Sign currentOperator))
+                if (token.Length == 1 && _binaryOperations.ContainsKey(token[0]))
                 {
-                    if (!BinaryFunctions.TryGetValue(currentOperator.Value, out var operation))
+                    if (stack.Count < 2)
                     {
-                        continue;
+                        result = double.NaN;
+                        return false;
                     }
-                    
-                    indexCorrector -= 2;
-                    calculatingExpression[i + indexCorrector] = operation(calculatingExpression[i + indexCorrector], calculatingExpression[i + indexCorrector + 1]);
+
+                    double b = stack.Pop();
+                    double a = stack.Pop();
+                    char op = token[0];
+
+                    double value = _binaryOperations[op](a, b);
+                    stack.Push(value);
                     continue;
                 }
 
-                if (PostfixExpression[i].Length == 1 && char.IsLetter(PostfixExpression[i][0]))
+                if (token.Contains('[') && token.EndsWith(']'))
                 {
-                    calculatingExpression[i + indexCorrector] = x;
-                    continue;
-                }
+                    int openBracket = token.IndexOf('[');
+                    string funcName = token[..openBracket];
 
-                if (PostfixExpression[i].Contains('[') && ValidFunctions.Contains(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')]))
-                {
-                    string arg = PostfixExpression[i].Substring(PostfixExpression[i].IndexOf('[') + 1, PostfixExpression[i].LastIndexOf(']') - PostfixExpression[i].IndexOf('[') - 1);
-                    var argument = new Function(arg);
-                    if (UnaryFunctions.TryGetValue(PostfixExpression[i][..PostfixExpression[i].IndexOf('[')], out var operation) && argument.TryCalculate(x, out calculatingExpression[i + indexCorrector]))
+                    if (!_unaryOperations.TryGetValue(funcName, out Func<double, double>? value))
                     {
-                        calculatingExpression[i + indexCorrector] = operation(calculatingExpression[i + indexCorrector]);
-                        continue;
+                        result = double.NaN;
+                        return false;
                     }
-                    return false;
+
+                    string argExpr = token.Substring(openBracket + 1, token.Length - openBracket - 2);
+                    var innerFunc = new Function(argExpr);
+
+                    if (!innerFunc.TryCalculate(x, out double argValue))
+                    {
+                        result = double.NaN;
+                        return false;
+                    }
+
+                    double funcResult = value(argValue);
+                    stack.Push(funcResult);
+                    continue;
                 }
 
+                if (token == "x")
+                {
+                    stack.Push(x);
+                    continue;
+                }
+
+                result = double.NaN;
                 return false;
             }
-            result = calculatingExpression[0];
+
+            if (stack.Count != 1)
+            {
+                result = double.NaN;
+                return false;
+            }
+
+            result = stack.Pop();
             return true;
         }
 
-        private bool CheckSignOrNot(string unit, int priorityCorrector, out Sign operation)
+        /// <summary>
+        /// Проверяет, является ли строка корректным числом
+        /// </summary>
+        private static bool IsNumber(string token, out double value)
         {
-            operation = new Sign(SignsList[0].Value, SignsList[0].Priority + priorityCorrector);
-
-            if (unit.Length == 1)
+            value = 0;
+            if (string.IsNullOrEmpty(token))
             {
-                foreach (Sign s in SignsList)
+                return false;
+            }
+
+            int start = 0;
+            bool hasMinus = false;
+
+            if (token[0] == '-')
+            {
+                if (token.Length == 1)
                 {
-                    if (s.Value == unit[0])
+                    return false;
+                }
+
+                start = 1;
+                hasMinus = true;
+            }
+
+            bool hasDecimalPoint = false;
+            int integerPart = 0;
+            double fractionalPart = 0;
+            int fractionalDigits = 0;
+
+            for (int i = start; i < token.Length; i++)
+            {
+                char c = token[i];
+
+                if (c == '.')
+                {
+                    if (hasDecimalPoint)
                     {
-                        operation = new Sign(s.Value, s.Priority + priorityCorrector);
-                        return true;
+                        return false;
                     }
+
+                    hasDecimalPoint = true;
+                    continue;
                 }
-            }
 
-            return false;
-        }
-
-        private bool CheckSignOrNot(char unit, int priorityCorrector, out Sign operation)
-        {
-            operation = new Sign(SignsList[0].Value, SignsList[0].Priority + priorityCorrector);
-
-            foreach (Sign s in SignsList)
-            {
-                if (s.Value == unit)
+                if (c < '0' || c > '9')
                 {
-                    operation = new Sign(s.Value, s.Priority + priorityCorrector);
-                    return true;
+                    return false;
+                }
+
+                if (!hasDecimalPoint)
+                {
+                    integerPart = integerPart * 10 + (c - '0');
+                }
+                else
+                {
+                    fractionalPart = fractionalPart * 10 + (c - '0');
+                    fractionalDigits++;
                 }
             }
 
-            return false;
+            double result = integerPart + fractionalPart / Math.Pow(10, fractionalDigits);
+            if (hasMinus)
+            {
+                result = -result;
+            }
+
+            value = result;
+            return true;
         }
     }
 }

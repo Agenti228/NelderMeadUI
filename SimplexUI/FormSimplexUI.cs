@@ -132,13 +132,13 @@ namespace SimplexUI
                     {
                         PointF frstPnt = ConvertFunctionToPanel(new PointF((float)_simplexes[i][j - 1][0], (float)_simplexes[i][j - 1].Value));
                         PointF scndPnt = ConvertFunctionToPanel(new PointF((float)_simplexes[i][j][0], (float)_simplexes[i][j].Value));
-                        if (double.IsNegativeInfinity(frstPnt.Y) || double.IsInfinity(frstPnt.Y) || double.IsNegativeInfinity(scndPnt.Y) || double.IsInfinity(scndPnt.Y)) 
-                        { 
+                        if (frstPnt.X < 0 || scndPnt.X < 0 || frstPnt.X > panelFunction.Width || scndPnt.X > panelFunction.Width)
+                        {
                             continue;
                         }
 
-                        if (double.IsNaN(frstPnt.Y) || double.IsNaN(frstPnt.Y) || double.IsNaN(scndPnt.Y) || double.IsNaN(scndPnt.Y)) 
-                        { 
+                        if (frstPnt.Y < 0 || scndPnt.Y < 0 || frstPnt.Y > panelFunction.Height || scndPnt.Y > panelFunction.Height)
+                        {
                             continue;
                         }
 

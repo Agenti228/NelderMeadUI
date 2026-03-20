@@ -1,14 +1,12 @@
 namespace SimplexUI.Tests
 {
-    /// <summary>
-    /// Блять ПЕРЕСИЧИТАТЬ значение для Assert
-    /// </summary>
     public class SimplexTests
     {
         const double _tolerance = 0.00000001;
         static double TestFunction(double[] x) => x[0];
         static double TestSumFunction(double[] x) => x[0] + x[1];
         static double TestPowFunction(double[] x) => Math.Pow(x[0] - 2, 2);
+
 
         [Fact]
         public void GetBest_ShouldReturnFirstPointAfterSort()
@@ -156,8 +154,7 @@ namespace SimplexUI.Tests
             var point1 = new EvaluateableVector([1], x => x[0]);
             var point2 = new EvaluateableVector([2], x => x[0] * 2); // другая функция
 
-            var ex = Assert.Throws<Exception>(() => simplex.Reflect(point1, point2));
-
+            var ex = Assert.Throws<Exceptions.MismatchingFunctionsException>(() => simplex.Reflect(point1, point2));
             Assert.Equal("Left and right part have different pointers to functions", ex.Message);
         }
 
@@ -170,11 +167,11 @@ namespace SimplexUI.Tests
 
             simplex.Iteration();
             simplex.SortPoints();
-            var worst = simplex.GetWorstInSorted;
+            var best = simplex.GetBestInSorted;
 
-            Assert.Equal(4.5, worst[0], _tolerance);
-            Assert.Equal(-8, worst[1], _tolerance);
-            Assert.Equal(-3.5, worst.Value, _tolerance);
+            Assert.Equal(4.5, best[0], _tolerance);
+            Assert.Equal(-8, best[1], _tolerance);
+            Assert.Equal(-3.5, best.Value, _tolerance);
         }
 
         [Fact]
@@ -186,27 +183,27 @@ namespace SimplexUI.Tests
 
             simplex.Iteration();
             simplex.SortPoints();
-            var worst = simplex.GetWorstInSorted;
+            var best = simplex.GetBestInSorted;
 
-            Assert.Equal(2, worst[0], _tolerance);
-            Assert.Equal(0, worst[1], _tolerance);
-            Assert.Equal(0, worst.Value, _tolerance);
+            Assert.Equal(2, best[0], _tolerance);
+            Assert.Equal(0, best[1], _tolerance);
+            Assert.Equal(0, best.Value, _tolerance);
         }
 
         [Fact]
         public void Iteration_WhenReflectedIsBetweenBestAndSecondBest_ShouldReplaceWorstWithReflected()
         {
             var settings = new Settings();
-            var initialConditions = new InitialConditions([[3, 0], [4, 0], [5, 0]], TestPowFunction);
+            var initialConditions = new InitialConditions([[2, 0], [4, 0], [5, 0]], TestPowFunction);
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
             simplex.SortPoints();
-            var worst = simplex.GetWorstInSorted;
+            var second = simplex.GetSecondBestInSorted;
 
-            Assert.Equal(1, worst[0], _tolerance);
-            Assert.Equal(0, worst[1], _tolerance);
-            Assert.Equal(1, worst.Value, _tolerance);
+            Assert.Equal(1, second[0], _tolerance);
+            Assert.Equal(0, second[1], _tolerance);
+            Assert.Equal(1, second.Value, _tolerance);
         }
 
         [Fact]
@@ -218,11 +215,11 @@ namespace SimplexUI.Tests
 
             simplex.Iteration();
             simplex.SortPoints();
-            var worst = simplex.GetWorstInSorted;
+            var second = simplex.GetSecondBestInSorted;
 
-            Assert.Equal(1.4, worst[0], _tolerance);
-            Assert.Equal(0, worst[1], _tolerance);
-            Assert.Equal(0.36, worst.Value, _tolerance);
+            Assert.Equal(1.4, second[0], _tolerance);
+            Assert.Equal(0, second[1], _tolerance);
+            Assert.Equal(0.36, second.Value, _tolerance);
         }
 
         [Fact]
@@ -234,7 +231,7 @@ namespace SimplexUI.Tests
 
             simplex.Iteration();
             simplex.SortPoints();
-            var worst = simplex.GetWorstInSorted;
+            var worst = simplex.GetSecondBestInSorted;
 
             Assert.Equal(1.5, worst[0], _tolerance);
             Assert.Equal(0, worst[1], _tolerance);
