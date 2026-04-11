@@ -1,203 +1,65 @@
 namespace SimplexUI
 {
-    /// <summary>
-    /// TODO:
-    /// Сделать приоритет у рендера для координат по X, а не по Y, чтобы очень сложенные графики рендерились нормально при прибижении
-    /// Добавить отрисовку координат по осям
-    /// </summary>
     public partial class FormSimplexUI : Form
     {
-        private float _scale;
-        private readonly Color _functionColor;
-        private readonly Brush _backBrush;
-        private PointF _center;
         private PointF _lastMouseLocation;
         private bool _movingScreen = false;
         private readonly List<EvaluateableVector[]> _simplexes = [];
-        private Function _function;
+        private Function _function = new(string.Empty);
         private const int _maxScale = 5000000;
         private const int _minScale = 1;
+
+        private readonly Dictionary<Layers, Layer> _drawableLayers;
 
         public FormSimplexUI()
         {
             InitializeComponent();
-            SetStartParametres();
-            _functionColor = Color.Red;
-            panelFunction.MouseWheel += PanelFunction_MouseWheel;
-            _backBrush = new SolidBrush(Color.White);
-            _function = new Function(textBoxFunction.Text);
-        }
 
-        #region XY methods
-        private void SetStartParametres()
-        {
-            _center = new PointF((panelFunction.Right - panelFunction.Left) / 2, (panelFunction.Bottom - panelFunction.Top) / 2);
-            _scale = 40;
-            buttonReturnSize.Visible = false;
-            buttonReturnSize.Enabled = false;
-            labelFunctionError.Visible = false;
-            listBoxIterations.Items.Clear();
-        }
-
-        private void DrawCoordinateAxes(Graphics g)
-        {
-            try
+            _drawableLayers = new Dictionary<Layers, Layer>
             {
-                float[] dash = [_scale / 8, _scale / 8];
-                using var p = new Pen(Color.Black);
-                p.Width = 2;
-                g.DrawLine(p, _center.X, 0, _center.X, panelFunction.ClientSize.Height);
-                g.DrawLine(p, 0, _center.Y, panelFunction.ClientSize.Width, _center.Y);
-            }
-            catch
-            {
-                _ = MessageBox.Show("Out of memory", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                SetStartParametres();
-                panelFunction.Invalidate();
-            }
-        }
-
-        private PointF ConvertPanelToFunction(PointF pnt)
-        {
-            if (pnt.Y > _center.Y)
-            {
-                pnt.Y = -Math.Abs(pnt.Y - _center.Y) / _scale;
-            }
-            else
-            {
-                pnt.Y = Math.Abs(_center.Y - pnt.Y) / _scale;
-            }
-
-            if (pnt.X > _center.X)
-            {
-                pnt.X = Math.Abs(pnt.X - _center.X) / _scale;
-            }
-            else
-            {
-                pnt.X = -Math.Abs(_center.X - pnt.X) / _scale;
-            }
-
-            return pnt;
-        }
-
-        private PointF ConvertFunctionToPanel(PointF pnt)
-        {
-            pnt.X = (_scale * pnt.X) + _center.X;
-            pnt.Y = (-_scale * pnt.Y) + _center.Y;
-            return pnt;
-        }
-        #endregion
-
-        #region Draw methods
-        private void DrawFunction(Graphics g)
-        {
-            var funcPointList = new List<PointF>();
-            PointF pnt = new System.Drawing.Point();
-            var p = new Pen(_functionColor)
-            {
-                Width = 2
+                [Layers.Axis] = new AxisLayer((Width, Height)),
+                [Layers.Graph] = new GraphLayer((Width, Height), _function),
+                [Layers.Simplex] = new SimplexLayer((Width, Height), _function),
             };
-            if (_function != null && _function.IsCorrect)
-            {
-                for (float i = 0; i < panelFunction.Width; i++)
-                {
-                    pnt.X = i;
-                    pnt.Y = 0;
-                    PointF pointF = ConvertPanelToFunction(pnt);
-                    pnt = pointF;
-                    _function.TryCalculate(pnt.X, out double result);
-                    pnt.Y = (float)result;
-                    funcPointList.Add(ConvertFunctionToPanel(pnt));
-                }
+        }
 
-                for (int i = 1; i < funcPointList.Count; i++)
-                {
-                    if (Math.Abs(funcPointList[i - 1].Y - funcPointList[i].Y) < panelFunction.Height)
-                    {
-                        g.DrawLine(p, funcPointList[i - 1], funcPointList[i]);
-                    }
-                }
+        private void TextBoxFunction_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                ProcessInput();
             }
         }
 
-        private void DrawSimplex(Graphics g)
+        private void ProcessInput()
         {
-            using var p = new Pen(Color.DeepPink);
-            p.Width = 2;
-            if (_function != null && _function.IsCorrect)
-            {
-                for (int i = 0; i < _simplexes.Count; i++)
-                {
-                    for (int j = 1; j < _simplexes[i].Length; j++)
-                    {
-                        PointF frstPnt = ConvertFunctionToPanel(new PointF((float)_simplexes[i][j - 1][0], (float)_simplexes[i][j - 1].Value));
-                        PointF scndPnt = ConvertFunctionToPanel(new PointF((float)_simplexes[i][j][0], (float)_simplexes[i][j].Value));
-                        if (frstPnt.X < 0 || scndPnt.X < 0 || frstPnt.X > panelFunction.Width || scndPnt.X > panelFunction.Width)
-                        {
-                            continue;
-                        }
-
-                        if (frstPnt.Y < 0 || scndPnt.Y < 0 || frstPnt.Y > panelFunction.Height || scndPnt.Y > panelFunction.Height)
-                        {
-                            continue;
-                        }
-
-                        g.DrawLine(p, frstPnt, scndPnt);
-                        g.DrawRectangle(Pens.Blue, frstPnt.X - 2, frstPnt.Y - 2, 4, 4);
-                        g.DrawRectangle(Pens.Blue, scndPnt.X - 2, scndPnt.Y - 2, 4, 4);
-                    }
-                }
-            }
-        }
-        #endregion
-
-        #region Buttons
-        private void ButtonStartScale_Click(object sender, EventArgs e)
-        {
-            _center = new PointF((panelFunction.Right - panelFunction.Left) / 2 + panelFunction.Left, (panelFunction.Top - panelFunction.Bottom) / 2 + panelFunction.Bottom);
-            _scale = 40;
-            panelFunction.Invalidate();
-        }
-
-        private void ButtonFunction_Click(object sender, EventArgs e)
-        {
+            ((GraphLayer)_drawableLayers[Layers.Graph]).Function = new Function(textBoxFunction.Text); // maybe do smth with it
             _function = new Function(textBoxFunction.Text);
             labelFunctionError.Visible = !_function.IsCorrect;
-            
+
             listBoxIterations.Items.Clear();
-            SimplexMethod();
             panelFunction.Invalidate();
+
+            UpdateSimplexes();
         }
 
+        #region Buttons
         private void ButtonReturnSize_Click(object sender, EventArgs e)
         {
-            _scale = 40;
-            buttonReturnSize.Visible = false;
-            buttonReturnSize.Enabled = false;
+            Layer.Scale = 40;
+
             panelFunction.Invalidate();
         }
         #endregion
 
-        #region panelFunc
+        #region Panel
         private void PanelFunction_Paint(object sender, PaintEventArgs e)
         {
-            if (panelFunction.BackgroundImage == null)
+            foreach (KeyValuePair<Layers, Layer> layer in _drawableLayers)
             {
-                e.Graphics.FillRectangle(_backBrush, panelFunction.ClientRectangle);
+                layer.Value.Draw(e.Graphics);
             }
-
-            if (_scale != 40)
-            {
-                buttonReturnSize.Visible = buttonReturnSize.Enabled = true;
-            }
-            else
-            {
-                buttonReturnSize.Visible = buttonReturnSize.Enabled = false;
-            }
-
-            DrawCoordinateAxes(e.Graphics);
-            DrawFunction(e.Graphics);
-            DrawSimplex(e.Graphics);
         }
 
         private void PanelFunction_MouseWheel(object? sender, MouseEventArgs? e)
@@ -209,21 +71,21 @@ namespace SimplexUI
 
             var worldPoint = new PointF()
             {
-                X = (e.Location.X - _center.X) / _scale,
-                Y = (e.Location.Y - _center.Y) / _scale
+                X = (e.Location.X - Layer.Center.X) / Layer.Scale,
+                Y = (e.Location.Y - Layer.Center.Y) / Layer.Scale
             };
 
-            if (e.Delta > 0 && _scale < _maxScale)
+            if (e.Delta > 0 && Layer.Scale < _maxScale)
             {
-                _scale = Math.Min(_scale * 1.1f, _maxScale);
+                Layer.Scale = Math.Min(Layer.Scale * 1.1f, _maxScale);
             }
-            else if (e.Delta < 0 && _scale > _minScale)
+            else if (e.Delta < 0 && Layer.Scale > _minScale)
             {
-                _scale = Math.Max(_scale / 1.1f, _minScale);
+                Layer.Scale = Math.Max(Layer.Scale / 1.1f, _minScale);
             }
 
-            _center.X = e.Location.X - (worldPoint.X * _scale);
-            _center.Y = e.Location.Y - (worldPoint.Y * _scale);
+            Layer.Center = new PointF(e.Location.X - (worldPoint.X * Layer.Scale), e.Location.Y - (worldPoint.Y * Layer.Scale));
+
             panelFunction.Invalidate();
         }
 
@@ -252,8 +114,9 @@ namespace SimplexUI
                 };
 
                 _lastMouseLocation = e.Location;
-                _center.X += delta.X;
-                _center.Y += delta.Y;
+
+                Layer.Center = new PointF(Layer.Center.X + delta.X, Layer.Center.Y + delta.Y);
+                Layer.Offset = delta;
                 panelFunction.Invalidate();
             }
         }
@@ -261,6 +124,14 @@ namespace SimplexUI
         private void PanelFunction_MouseClick(object sender, MouseEventArgs e)
         {
             panelFunction.Invalidate();
+        }
+
+        private void FormSimplexUI_Resize(object sender, EventArgs e)
+        {
+            foreach (var layer in _drawableLayers)
+            {
+                layer.Value.PanelDimentions = (Width, Height);
+            }
         }
         #endregion
 
@@ -274,7 +145,26 @@ namespace SimplexUI
             }
         }
 
-        private void SimplexMethod()
+        public void UpdateSimplexes()
+        {
+            if (!_function.IsCorrect)
+            {
+                return;
+            }
+
+            List<Simplex> simplexes = [.. IterateSimplexMethod()];
+            ((SimplexLayer)_drawableLayers[Layers.Simplex]).Simplexes.Clear();
+
+            for (int i = 0; i < simplexes.Count; i++)
+            {
+                Simplex simplex = simplexes[i];
+                simplex.SortVectors();
+                ((SimplexLayer)_drawableLayers[Layers.Simplex]).Simplexes.Add(simplex.Vectors);
+                _ = listBoxIterations.Items.Add($"Iteration {i + 1}: {simplex.GetBestInSorted}");
+            }
+        }
+
+        public Simplex GetInitialSimlpex()
         {
             _simplexes.Clear();
 
@@ -285,27 +175,25 @@ namespace SimplexUI
             int maxIterations = 100;
             var settings = new Settings(maxIterations);
 
-            var simplex = new Simplex(settings, initialConditions);
-
-            for (int i = 0; i < settings.MaxIterations; i++)
-            {
-                _simplexes.Add(simplex.ClonePoints());
-                AddBestVectorOnIteration(i); //do something with double sorting
-
-                simplex.Iteration(); //also sorts _points
-
-            }
-
-            void AddBestVectorOnIteration(int iteration)
-            {
-                simplex.SortPoints();
-                _ = listBoxIterations.Items.Add($"Iteration {iteration + 1}: {simplex.GetBestInSorted}");
-            }
+            return new Simplex(settings, initialConditions);
 
             double OneDimentionalFunction(double[] point)
             {
                 _ = _function.TryCalculate(point[0], out double result);
                 return result;
+            }
+        }
+
+        public IEnumerable<Simplex> IterateSimplexMethod()
+        {
+            var simplex = GetInitialSimlpex();
+
+            for (int i = 0; i < simplex.Settings.MaxIterations; i++)
+            {
+                simplex.SortVectors();
+                simplex.IterationOnSorted();
+
+                yield return (Simplex)simplex.Clone();
             }
         }
         #endregion

@@ -45,7 +45,7 @@ namespace SimplexUI
         };
 
         private readonly string _infixExpression;
-        private string[] _postfixTokens = []; //Андрей, почини пж. Check if it has some strange interractions
+        private string[] _postfixTokens = []; //Check if it has some strange interractions
 
         public bool IsCorrect { get; private set; }
 
@@ -106,8 +106,7 @@ namespace SimplexUI
                     _ = output.Append('?');
                     int currentPriority = _operatorPriority[ch] + parenthesesDepth;
 
-                    while (operatorStack.Count > 0 && operatorStack.Peek() != '(' &&
-                           _operatorPriority[operatorStack.Peek()] + parenthesesDepth >= currentPriority)
+                    while (operatorStack.Count > 0 && operatorStack.Peek() != '(' && _operatorPriority[operatorStack.Peek()] + parenthesesDepth >= currentPriority)
                     {
                         _ = output.Append(operatorStack.Pop()).Append('?');
                     }
@@ -127,9 +126,9 @@ namespace SimplexUI
             string postfixString = output.ToString();
             _postfixTokens = postfixString.Split('?', StringSplitOptions.RemoveEmptyEntries);
 
-            if (parenthesesDepth == 0 && bracketDepth == 0)
+            if (parenthesesDepth == 0 && bracketDepth == 0 && postfixString != string.Empty)
             {
-                IsCorrect = TryCalculateInternal(0, out _);
+                IsCorrect = true;
             }
             else
             {
@@ -190,7 +189,7 @@ namespace SimplexUI
                     int openBracket = token.IndexOf('[');
                     string funcName = token[..openBracket];
 
-                    if (!_unaryOperations.TryGetValue(funcName, out Func<double, double>? value))
+                    if (!_unaryOperations.TryGetValue(funcName, out Func<double, double>? function))
                     {
                         result = double.NaN;
                         return false;
@@ -205,7 +204,7 @@ namespace SimplexUI
                         return false;
                     }
 
-                    double funcResult = value(argValue);
+                    double funcResult = function(argValue);
                     stack.Push(funcResult);
                     continue;
                 }

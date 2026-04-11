@@ -33,29 +33,29 @@
             labelFunction = new Label();
             textBoxFunction = new TextBox();
             labelFunctionError = new Label();
-            buttonFunction = new Button();
             listBoxIterations = new ListBox();
             labelIterations = new Label();
-            panelFunction.SuspendLayout();
+            groupBoxControlElements = new GroupBox();
+            groupBoxControlElements.SuspendLayout();
             SuspendLayout();
             // 
             // panelFunction
             // 
-            panelFunction.AutoSize = true;
-            panelFunction.Controls.Add(buttonReturnSize);
-            panelFunction.Location = new Point(404, 0);
+            panelFunction.Dock = DockStyle.Fill;
+            panelFunction.Location = new Point(0, 0);
             panelFunction.Name = "panelFunction";
-            panelFunction.Size = new Size(1180, 861);
+            panelFunction.Size = new Size(1584, 861);
             panelFunction.TabIndex = 0;
             panelFunction.Paint += PanelFunction_Paint;
             panelFunction.MouseClick += PanelFunction_MouseClick;
             panelFunction.MouseDown += PanelFunction_MouseDown;
             panelFunction.MouseMove += PanelFunction_MouseMove;
             panelFunction.MouseUp += PanelFunction_MouseUp;
+            panelFunction.MouseWheel += PanelFunction_MouseWheel;
             // 
             // buttonReturnSize
             // 
-            buttonReturnSize.Location = new Point(1094, 835);
+            buttonReturnSize.Location = new Point(252, 93);
             buttonReturnSize.Name = "buttonReturnSize";
             buttonReturnSize.Size = new Size(83, 23);
             buttonReturnSize.TabIndex = 0;
@@ -66,7 +66,7 @@
             // labelFunction
             // 
             labelFunction.AutoSize = true;
-            labelFunction.Location = new Point(12, 9);
+            labelFunction.Location = new Point(0, 4);
             labelFunction.Name = "labelFunction";
             labelFunction.Size = new Size(54, 15);
             labelFunction.TabIndex = 1;
@@ -74,70 +74,71 @@
             // 
             // textBoxFunction
             // 
-            textBoxFunction.Location = new Point(12, 27);
+            textBoxFunction.Location = new Point(0, 22);
             textBoxFunction.Name = "textBoxFunction";
-            textBoxFunction.Size = new Size(262, 23);
+            textBoxFunction.Size = new Size(326, 23);
             textBoxFunction.TabIndex = 2;
-            textBoxFunction.TextChanged += TextBoxFunction_TextChanged;
+            textBoxFunction.KeyDown += TextBoxFunction_KeyDown;
             // 
             // labelFunctionError
             // 
             labelFunctionError.AutoSize = true;
             labelFunctionError.ForeColor = Color.Red;
-            labelFunctionError.Location = new Point(12, 53);
+            labelFunctionError.Location = new Point(0, 48);
             labelFunctionError.Name = "labelFunctionError";
             labelFunctionError.Size = new Size(49, 15);
             labelFunctionError.TabIndex = 3;
             labelFunctionError.Text = "! ERROR";
             // 
-            // buttonFunction
-            // 
-            buttonFunction.Location = new Point(280, 27);
-            buttonFunction.Name = "buttonFunction";
-            buttonFunction.Size = new Size(118, 23);
-            buttonFunction.TabIndex = 5;
-            buttonFunction.Text = "Calculate";
-            buttonFunction.UseVisualStyleBackColor = true;
-            buttonFunction.Click += ButtonFunction_Click;
-            // 
             // listBoxIterations
             // 
             listBoxIterations.FormattingEnabled = true;
             listBoxIterations.ItemHeight = 15;
-            listBoxIterations.Location = new Point(12, 109);
+            listBoxIterations.Location = new Point(0, 122);
             listBoxIterations.Name = "listBoxIterations";
-            listBoxIterations.Size = new Size(386, 739);
+            listBoxIterations.Size = new Size(341, 739);
             listBoxIterations.TabIndex = 6;
             // 
             // labelIterations
             // 
             labelIterations.AutoSize = true;
-            labelIterations.Location = new Point(12, 91);
+            labelIterations.Location = new Point(0, 104);
             labelIterations.Name = "labelIterations";
             labelIterations.Size = new Size(59, 15);
             labelIterations.TabIndex = 7;
             labelIterations.Text = "Iterations:";
+            // 
+            // groupBoxControlElements
+            // 
+            groupBoxControlElements.Controls.Add(buttonReturnSize);
+            groupBoxControlElements.Controls.Add(labelIterations);
+            groupBoxControlElements.Controls.Add(listBoxIterations);
+            groupBoxControlElements.Controls.Add(textBoxFunction);
+            groupBoxControlElements.Controls.Add(labelFunction);
+            groupBoxControlElements.Controls.Add(labelFunctionError);
+            groupBoxControlElements.Dock = DockStyle.Right;
+            groupBoxControlElements.Location = new Point(1243, 0);
+            groupBoxControlElements.Name = "groupBoxControlElements";
+            groupBoxControlElements.Size = new Size(341, 861);
+            groupBoxControlElements.TabIndex = 8;
+            groupBoxControlElements.TabStop = false;
             // 
             // FormSimplexUI
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1584, 861);
-            Controls.Add(labelIterations);
-            Controls.Add(listBoxIterations);
-            Controls.Add(buttonFunction);
+            Controls.Add(groupBoxControlElements);
             Controls.Add(panelFunction);
-            Controls.Add(labelFunctionError);
-            Controls.Add(textBoxFunction);
-            Controls.Add(labelFunction);
             DoubleBuffered = true;
             MaximumSize = new Size(6000, 4000);
             MinimumSize = new Size(600, 400);
             Name = "FormSimplexUI";
             Text = "Nelder Mead";
-            panelFunction.ResumeLayout(false);
+            Resize += FormSimplexUI_Resize;
+            groupBoxControlElements.ResumeLayout(false);
+            groupBoxControlElements.PerformLayout();
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
@@ -146,9 +147,9 @@
         private Label labelFunction;
         private TextBox textBoxFunction;
         private Label labelFunctionError;
-        private Button buttonFunction;
         private Button buttonReturnSize;
         private ListBox listBoxIterations;
         private Label labelIterations;
+        private GroupBox groupBoxControlElements;
     }
 }
