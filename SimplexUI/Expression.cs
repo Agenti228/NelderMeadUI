@@ -12,16 +12,25 @@ namespace SimplexUI
         /// <summary>
         /// Проверяет, является ли символ бинарным оператором (не скобкой)
         /// </summary>
-        private static bool IsOperator(char ch) => _operatorPriority.ContainsKey(ch) && ch != '(' && ch != ')';
-        private static readonly Dictionary<char, int> _operatorPriority = new()
+        private static bool IsOperator(string item) => _operatorPriority.ContainsKey(item) && item != "(" && item != ")";
+        private static bool IsLetter(char item) => (item >= 'a' && item <= 'z') || (item >= 'A' && item <= 'Z');
+        private static readonly Dictionary<string, int> _operatorPriority = new()
         {
-            { '+', 1 },
-            { '-', 1 },
-            { '*', 2 },
-            { '/', 2 },
-            { '^', 3 },
-            { '(', 0 },
-            { ')', 0 }
+            { "+", 1 },
+            { "-", 1 },
+            { "*", 2 },
+            { "/", 2 },
+            { "^", 3 },
+            { "(", 0 },
+            { ")", 0 },
+            { "sin", 4 },
+            { "cos", 4 },
+            { "tan", 4 },
+            { "log", 4 },
+            { "sqrt", 4 },
+            { "abs", 4 },
+            { "exp", 4 }
+
         };
 
         private static readonly Dictionary<char, Func<double, double, double>> _binaryOperations = new()
@@ -52,70 +61,108 @@ namespace SimplexUI
         public Function(string input)
         {
             _infixExpression = input.Replace(" ", "").ToLower();
-            ParseToPostfix();
+            IsCorrect = TryParseToPostfix();
         }
 
         /// <summary>
         /// Преобразование инфиксного выражения в постфиксную запись (алгоритм сортировочной станции)
         /// </summary>
-        private void ParseToPostfix()
+        private bool TryParseToPostfix()
         {
             var output = new StringBuilder();
-            var operatorStack = new Stack<char>();
+            var operatorStack = new Stack<string>();
             int parenthesesDepth = 0;
-            int bracketDepth = 0;
 
             for (int i = 0; i < _infixExpression.Length; i++)
             {
                 char ch = _infixExpression[i];
 
-                if (ch == '(')
+                if (char.IsDigit(ch) || ch == '.')
                 {
-                    parenthesesDepth += 10;
-                    operatorStack.Push(ch);
+                    int start = i;
+                    while (i < _infixExpression.Length && (char.IsDigit(_infixExpression[i]) || _infixExpression[i] == '.'))
+                    {
+                        i++;
+                    }
+                    _ = output.Append(_infixExpression[start..i]);
+                    i--;
+                    continue;
                 }
-                else if (ch == ')')
+
+                if (ch == '(' || ch == '[')
+                {
+                    if (i > 0 && (char.IsDigit(_infixExpression[i - 1]) || _infixExpression[i - 1] == 'x'))
+                    {
+                        return false;
+                    }
+                    parenthesesDepth += 10;
+                    operatorStack.Push(ch.ToString());
+                    continue;
+                }
+
+                if (ch == ')' || ch == ']')
                 {
                     parenthesesDepth -= 10;
-                    while (operatorStack.Count > 0 && operatorStack.Peek() != '(')
+                    while (operatorStack.Count > 0 && operatorStack.Peek() != "(")
                     {
                         _ = output.Append('?').Append(operatorStack.Pop());
                     }
-                    if (operatorStack.Count > 0 && operatorStack.Peek() == '(')
+                    if (operatorStack.Count > 0 && operatorStack.Peek() == "(")
                     {
                         _ = operatorStack.Pop();
                     }
+                    continue;
                 }
-                else if (ch == '[')
+
+                if (!IsNumber(ch.ToString(), out _))
                 {
-                    bracketDepth++;
-                    _ = output.Append(ch);
-                }
-                else if (ch == ']')
-                {
-                    bracketDepth--;
-                    _ = output.Append(ch);
-                }
-                else if (bracketDepth == 0 && IsOperator(ch))
-                {
-                    if (ch == '-' && (i == 0 || _infixExpression[i - 1] == '(' || _infixExpression[i - 1] == '['))
+                    string op = ch.ToString();
+                    if (IsOperator(op))
                     {
-                        _ = output.Append('0');
+                        if ((i > 0 && IsOperator(_infixExpression[i - 1].ToString())))
+                        {
+                            return false;
+                        }
+                        if (ch == '-' && (i == 0 || _infixExpression[i - 1] == '(' || _infixExpression[i - 1] == '['))
+                        {
+                            _ = output.Append('0');
+                        }
+                    }
+                    else if (op == "x")
+                    {
+                        _ = output.Append('?');
+                        _ = output.Append(op);
+                        continue;
+                    }
+                    else if (IsLetter(ch))
+                    {
+                        int start = i;
+                        while (i < _infixExpression.Length && char.IsLetter(_infixExpression[i]))
+                        {
+                            i++;
+                        }
+                        op = _infixExpression[start..i].ToLower();
+                        i--;
+                        if (!IsOperator(op))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
                     }
 
                     _ = output.Append('?');
-                    int currentPriority = _operatorPriority[ch] + parenthesesDepth;
+                    int currentPriority = _operatorPriority[op.ToString()] + parenthesesDepth;
 
-                    while (operatorStack.Count > 0 && operatorStack.Peek() != '(' &&
+                    while (operatorStack.Count > 0 && operatorStack.Peek() != "(" &&
                            _operatorPriority[operatorStack.Peek()] + parenthesesDepth >= currentPriority)
                     {
                         _ = output.Append(operatorStack.Pop()).Append('?');
                     }
-                    operatorStack.Push(ch);
-                }
-                else
-                {
-                    _ = output.Append(ch);
+                    operatorStack.Push(op);
+                    continue;
                 }
             }
 
@@ -127,14 +174,11 @@ namespace SimplexUI
             string postfixString = output.ToString();
             _postfixTokens = postfixString.Split('?', StringSplitOptions.RemoveEmptyEntries);
 
-            if (parenthesesDepth == 0 && bracketDepth == 0)
+            if (parenthesesDepth == 0)
             {
-                IsCorrect = TryCalculateInternal(0, out _);
+                return true;
             }
-            else
-            {
-                IsCorrect = false;
-            }
+            return false;
         }
 
         /// <summary>
@@ -185,27 +229,10 @@ namespace SimplexUI
                     continue;
                 }
 
-                if (token.Contains('[') && token.EndsWith(']'))
+                if (_unaryOperations.ContainsKey(token))
                 {
-                    int openBracket = token.IndexOf('[');
-                    string funcName = token[..openBracket];
-
-                    if (!_unaryOperations.TryGetValue(funcName, out Func<double, double>? value))
-                    {
-                        result = double.NaN;
-                        return false;
-                    }
-
-                    string argExpr = token.Substring(openBracket + 1, token.Length - openBracket - 2);
-                    var innerFunc = new Function(argExpr);
-
-                    if (!innerFunc.TryCalculate(x, out double argValue))
-                    {
-                        result = double.NaN;
-                        return false;
-                    }
-
-                    double funcResult = value(argValue);
+                    double a = stack.Pop();
+                    double funcResult = _unaryOperations[token](a);
                     stack.Push(funcResult);
                     continue;
                 }
