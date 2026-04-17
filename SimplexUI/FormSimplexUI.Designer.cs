@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             panelFunction = new DoubleBufferedPanel();
-            buttonReturnSize = new Button();
+            buttonResetView = new Button();
             labelFunction = new Label();
             textBoxFunction = new TextBox();
             labelFunctionError = new Label();
@@ -47,21 +47,20 @@
             panelFunction.Size = new Size(1584, 861);
             panelFunction.TabIndex = 0;
             panelFunction.Paint += PanelFunction_Paint;
-            panelFunction.MouseClick += PanelFunction_MouseClick;
             panelFunction.MouseDown += PanelFunction_MouseDown;
             panelFunction.MouseMove += PanelFunction_MouseMove;
             panelFunction.MouseUp += PanelFunction_MouseUp;
             panelFunction.MouseWheel += PanelFunction_MouseWheel;
             // 
-            // buttonReturnSize
+            // buttonResetView
             // 
-            buttonReturnSize.Location = new Point(252, 93);
-            buttonReturnSize.Name = "buttonReturnSize";
-            buttonReturnSize.Size = new Size(83, 23);
-            buttonReturnSize.TabIndex = 0;
-            buttonReturnSize.Text = "Reset scale";
-            buttonReturnSize.UseVisualStyleBackColor = true;
-            buttonReturnSize.Click += ButtonReturnSize_Click;
+            buttonResetView.Location = new Point(351, 96);
+            buttonResetView.Name = "buttonResetView";
+            buttonResetView.Size = new Size(83, 23);
+            buttonResetView.TabIndex = 0;
+            buttonResetView.Text = "Reset view";
+            buttonResetView.UseVisualStyleBackColor = true;
+            buttonResetView.Click += ButtonResetView_Click;
             // 
             // labelFunction
             // 
@@ -76,7 +75,7 @@
             // 
             textBoxFunction.Location = new Point(0, 22);
             textBoxFunction.Name = "textBoxFunction";
-            textBoxFunction.Size = new Size(326, 23);
+            textBoxFunction.Size = new Size(434, 23);
             textBoxFunction.TabIndex = 2;
             textBoxFunction.KeyDown += TextBoxFunction_KeyDown;
             // 
@@ -86,9 +85,10 @@
             labelFunctionError.ForeColor = Color.Red;
             labelFunctionError.Location = new Point(0, 48);
             labelFunctionError.Name = "labelFunctionError";
-            labelFunctionError.Size = new Size(49, 15);
+            labelFunctionError.Size = new Size(119, 15);
             labelFunctionError.TabIndex = 3;
-            labelFunctionError.Text = "! ERROR";
+            labelFunctionError.Text = "INVALID EXPRESSION";
+            labelFunctionError.Visible = false;
             // 
             // listBoxIterations
             // 
@@ -96,7 +96,7 @@
             listBoxIterations.ItemHeight = 15;
             listBoxIterations.Location = new Point(0, 122);
             listBoxIterations.Name = "listBoxIterations";
-            listBoxIterations.Size = new Size(341, 739);
+            listBoxIterations.Size = new Size(437, 739);
             listBoxIterations.TabIndex = 6;
             // 
             // labelIterations
@@ -110,16 +110,16 @@
             // 
             // groupBoxControlElements
             // 
-            groupBoxControlElements.Controls.Add(buttonReturnSize);
+            groupBoxControlElements.Controls.Add(buttonResetView);
             groupBoxControlElements.Controls.Add(labelIterations);
             groupBoxControlElements.Controls.Add(listBoxIterations);
             groupBoxControlElements.Controls.Add(textBoxFunction);
             groupBoxControlElements.Controls.Add(labelFunction);
             groupBoxControlElements.Controls.Add(labelFunctionError);
             groupBoxControlElements.Dock = DockStyle.Right;
-            groupBoxControlElements.Location = new Point(1243, 0);
+            groupBoxControlElements.Location = new Point(1147, 0);
             groupBoxControlElements.Name = "groupBoxControlElements";
-            groupBoxControlElements.Size = new Size(341, 861);
+            groupBoxControlElements.Size = new Size(437, 861);
             groupBoxControlElements.TabIndex = 8;
             groupBoxControlElements.TabStop = false;
             // 
@@ -147,7 +147,7 @@
         private Label labelFunction;
         private TextBox textBoxFunction;
         private Label labelFunctionError;
-        private Button buttonReturnSize;
+        private Button buttonResetView;
         private ListBox listBoxIterations;
         private Label labelIterations;
         private GroupBox groupBoxControlElements;
