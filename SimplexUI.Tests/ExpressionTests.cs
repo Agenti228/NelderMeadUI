@@ -58,9 +58,9 @@
             var func = new Function("2+3*4");
             double expected = 2 + 3 * 4; // 14
 
-            bool success = func.TryCalculate(0, out double result);
+            double result = func.Calculate([0]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
@@ -71,9 +71,9 @@
             double x = 3;
             double expected = x * x + 2 * x + 1;
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
@@ -83,9 +83,9 @@
             var func = new Function("(2+3)*4");
             double expected = (2 + 3) * 4; // 20
 
-            bool success = func.TryCalculate(0, out double result);
+            double result = func.Calculate([0]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
@@ -95,9 +95,9 @@
             var func = new Function("-5+3");
             double expected = -5 + 3; // -2
 
-            bool success = func.TryCalculate(0, out double result);
+            double result = func.Calculate([0]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
@@ -108,100 +108,100 @@
             double x = 2;
             double expected = -2;
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
         [Fact]
         public void TryCalculate_UnaryFunctionSin_ReturnsCorrectValue()
         {
-            var func = new Function("sin[x]");
+            var func = new Function("sin(x)");
             double x = Math.PI / 2;
             double expected = Math.Sin(x); // 1
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
         [Fact]
         public void TryCalculate_UnaryFunctionCos_ReturnsCorrectValue()
         {
-            var func = new Function("cos[x]");
+            var func = new Function("cos(x)");
             double x = 0;
             double expected = Math.Cos(x); // 1
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
         [Fact]
         public void TryCalculate_UnaryFunctionTan_ReturnsCorrectValue()
         {
-            var func = new Function("tan[x]");
+            var func = new Function("tan(x)");
             double x = Math.PI / 4;
             double expected = Math.Tan(x); // 1
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
         [Fact]
         public void TryCalculate_UnaryFunctionLog_ReturnsCorrectValue()
         {
-            var func = new Function("log[x]");
+            var func = new Function("log(x)");
             double x = Math.E;
             double expected = Math.Log(x); // 1
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
         [Fact]
         public void TryCalculate_UnaryFunctionAbs_ReturnsCorrectValue()
         {
-            var func = new Function("abs[x]");
+            var func = new Function("abs(x)");
             double x = -5;
             double expected = Math.Abs(x); // 5
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
         [Fact]
         public void TryCalculate_NestedFunctions_ReturnsCorrectValue()
         {
-            var func = new Function("sin[cos[x]]");
+            var func = new Function("sin(cos(x))");
             double x = 0;
             double expected = Math.Sin(Math.Cos(0)); // sin(1) ~ 0.84147
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 5);
         }
 
         [Fact]
         public void TryCalculate_FunctionWithExpressionInside_ReturnsCorrectValue()
         {
-            var func = new Function("sin[x+1]");
+            var func = new Function("sin(x+1)");
             double x = 0;
             double expected = Math.Sin(1); // ~ 0.84147
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 5);
         }
 
@@ -210,9 +210,9 @@
         {
             var func = new Function("1/0");
 
-            bool success = func.TryCalculate(0, out double result);
+            double result = func.Calculate([0]);
 
-            Assert.True(success); // вычисление не должно вернуть false, просто результат бесконечность
+            Assert.True(func.IsCorrect); // вычисление не должно вернуть false, просто результат бесконечность
             Assert.Equal(double.PositiveInfinity, result);
         }
 
@@ -221,9 +221,9 @@
         {
             var func = new Function("2+*3");
 
-            bool success = func.TryCalculate(0, out double result);
+            double result = func.Calculate([0]);
 
-            Assert.False(success);
+            Assert.False(func.IsCorrect);
             Assert.Equal(double.NaN, result);
         }
 
@@ -232,9 +232,9 @@
         {
             var func = new Function("unknown(x)");
 
-            bool success = func.TryCalculate(0, out double result);
+            double result = func.Calculate([0]);
 
-            Assert.False(success);
+            Assert.False(func.IsCorrect);
             Assert.Equal(double.NaN, result);
         }
 
@@ -243,22 +243,22 @@
         {
             var func = new Function("2+*3");
 
-            bool success = func.TryCalculate(0, out double result);
+            double result = func.Calculate([0]);
 
-            Assert.False(success);
+            Assert.False(func.IsCorrect);
             Assert.Equal(double.NaN, result);
         }
 
         [Fact]
         public void TryCalculate_ComplexExpression_ReturnsCorrectValue()
         {
-            var func = new Function("2*sin[x] + sqrt[x+1] - abs[-3]");
+            var func = new Function("2*sin(x) + sqrt(x+1) - abs(-3)");
             double x = 2;
             double expected = 2 * Math.Sin(2) + Math.Sqrt(3) - 3; // примерно 2*0.9093 + 1.732 - 3 = 1.8186+1.732-3=0.5506
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 4);
         }
 
@@ -269,22 +269,22 @@
             double x = 4;
             double expected = 2 + 3 * 4; // 14
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
 
         [Fact]
         public void TryCalculate_ExpressionWithUnaryMinusAndFunction_ReturnsCorrectValue()
         {
-            var func = new Function("-sin[x]");
+            var func = new Function("-sin(x)");
             double x = 0;
             double expected = -Math.Sin(0); // 0
 
-            bool success = func.TryCalculate(x, out double result);
+            double result = func.Calculate([x]);
 
-            Assert.True(success);
+            Assert.True(func.IsCorrect);
             Assert.Equal(expected, result, precision: 10);
         }
     }
