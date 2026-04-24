@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             panelFunction = new DoubleBufferedPanel();
+            statusStrip = new StatusStrip();
+            pictureBox = new PictureBox();
             buttonResetView = new Button();
             labelFunction = new Label();
             textBoxFunction = new TextBox();
@@ -36,11 +38,15 @@
             listBoxIterations = new ListBox();
             labelIterations = new Label();
             groupBoxControlElements = new GroupBox();
+            panelFunction.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             groupBoxControlElements.SuspendLayout();
             SuspendLayout();
             // 
             // panelFunction
             // 
+            panelFunction.Controls.Add(statusStrip);
+            panelFunction.Controls.Add(pictureBox);
             panelFunction.Dock = DockStyle.Fill;
             panelFunction.Location = new Point(0, 0);
             panelFunction.Name = "panelFunction";
@@ -51,6 +57,30 @@
             panelFunction.MouseMove += PanelFunction_MouseMove;
             panelFunction.MouseUp += PanelFunction_MouseUp;
             panelFunction.MouseWheel += PanelFunction_MouseWheel;
+            // 
+            // statusStrip
+            // 
+            statusStrip.Enabled = false;
+            statusStrip.Location = new Point(0, 839);
+            statusStrip.Name = "statusStrip";
+            statusStrip.Size = new Size(1584, 22);
+            statusStrip.TabIndex = 1;
+            statusStrip.Text = "statusStrip1";
+            statusStrip.Visible = false;
+            // 
+            // pictureBox
+            // 
+            pictureBox.Enabled = false;
+            pictureBox.Location = new Point(3, 3);
+            pictureBox.Name = "pictureBox";
+            pictureBox.Size = new Size(1138, 855);
+            pictureBox.TabIndex = 0;
+            pictureBox.TabStop = false;
+            pictureBox.Visible = false;
+            pictureBox.Paint += pictureBox_Paint;
+            pictureBox.MouseDown += pictureBox_MouseDown;
+            pictureBox.MouseMove += pictureBox_MouseMove;
+            pictureBox.MouseUp += pictureBox_MouseUp;
             // 
             // buttonResetView
             // 
@@ -136,6 +166,9 @@
             Name = "FormSimplexUI";
             Text = "Nelder Mead";
             Resize += FormSimplexUI_Resize;
+            panelFunction.ResumeLayout(false);
+            panelFunction.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox).EndInit();
             groupBoxControlElements.ResumeLayout(false);
             groupBoxControlElements.PerformLayout();
             ResumeLayout(false);
@@ -151,5 +184,7 @@
         private ListBox listBoxIterations;
         private Label labelIterations;
         private GroupBox groupBoxControlElements;
+        private PictureBox pictureBox;
+        private StatusStrip statusStrip;
     }
 }
