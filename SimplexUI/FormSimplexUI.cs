@@ -26,7 +26,7 @@ namespace SimplexUI
                 [LayerNames.Simplex] = new SimplexLayer((Width, Height), _function),
             };
 
-            _strategy = new UserIterationStrategy([10], point => {
+            _strategy = new MaxIterationsStrategy([10], point => {
                 _ = _function.TryCalculate(point[0], out double result);
                 return result;
             });
