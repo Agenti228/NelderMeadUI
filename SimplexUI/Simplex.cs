@@ -2,7 +2,7 @@
 
 namespace SimplexUI
 {
-    public struct Simplex
+    public struct Simplex : ICloneable
     {
         /// <summary>
         /// Simplex points MUST be sorted before calling this
@@ -17,7 +17,7 @@ namespace SimplexUI
                     throw new UnsortedArrayException("Can't get best point in unsorted array");
                 }
 
-                return _vectors[0];
+                return Vectors[0];
             }
         }
         /// <summary>
@@ -33,7 +33,7 @@ namespace SimplexUI
                     throw new UnsortedArrayException("Can't get second best point in unsorted array");
                 }
 
-                return _vectors[1];
+                return Vectors[1];
             }
         }
         /// <summary>
@@ -49,7 +49,7 @@ namespace SimplexUI
                     throw new UnsortedArrayException("Can't get worst point in unsorted array");
                 }
 
-                return _vectors[^1];
+                return Vectors[^1];
             }
         }
         /// <summary>
@@ -65,34 +65,41 @@ namespace SimplexUI
                     throw new UnsortedArrayException("Can't get center point in unsorted array");
                 }
 
-                var center = new EvaluateableVector(new double[_initialConditions.SimplexDimention - 1], _initialConditions.VectorFunction);
+                var center = new EvaluateableVector(new double[InitialConditions.SimplexDimention - 1], InitialConditions.VectorFunction);
 
-                for (int i = 0; i < _vectors.Length - 1; i++)
+                for (int i = 0; i < Vectors.Length - 1; i++)
                 {
-                    center += _vectors[i];
+                    center += Vectors[i];
                 }
 
-                return center / (_vectors.Length - 1);
+                return center / (Vectors.Length - 1);
             } 
         }
 
-        private readonly Settings _settings = new();
-        private readonly InitialConditions _initialConditions = new();
-        private readonly EvaluateableVector[] _vectors;
+        public Settings Settings { get; }
+        public InitialConditions InitialConditions { get; }
+        public EvaluateableVector[] Vectors { get; }
         private bool _vectorsSorted = false;
 
         public Simplex(Settings settings, InitialConditions initialConditions)
         {
-            _settings = settings;
-            _initialConditions = initialConditions;
+            Settings = settings;
+            InitialConditions = initialConditions;
 
-            _vectors = new EvaluateableVector[initialConditions.SimplexDimention];
-            Array.Copy(initialConditions.InitialVectors, _vectors, _vectors.Length);
+            Vectors = new EvaluateableVector[initialConditions.SimplexDimention];
+            Array.Copy(initialConditions.InitialVectors, Vectors, Vectors.Length);
         }
 
-        public void Iteration()
+        /// <summary>
+        /// Simplex points MUST be sorted before calling this
+        /// </summary>
+        /// <exception cref="UnsortedArrayException"></exception>
+        public void IterationOnSorted()
         {
-            SortPoints();
+            if (!_vectorsSorted)
+            {
+                throw new UnsortedArrayException("Can't iterate on unsorted array");
+            }
 
             EvaluateableVector reflected = Reflect(GetWorstInSorted, GetCenterInSorted);
 
@@ -148,54 +155,62 @@ namespace SimplexUI
             _vectorsSorted = false;
         }
 
-        public void SortPoints()
+        public void SortVectors()
         {
-            Array.Sort(_vectors);
+            Array.Sort(Vectors);
             _vectorsSorted = true;
         }
 
         public readonly EvaluateableVector Reflect(EvaluateableVector reflectedPoint, EvaluateableVector reflectionPoint)
         {
-            return reflectionPoint + (reflectionPoint - reflectedPoint) * _settings.Reflection;
+            return reflectionPoint + (reflectionPoint - reflectedPoint) * Settings.Reflection;
         }
 
         public readonly EvaluateableVector Expand(EvaluateableVector expandedPoint, EvaluateableVector expantionPoint)
         {
-            return expantionPoint + (expandedPoint - expantionPoint) * _settings.Stretching;
+            return expantionPoint + (expandedPoint - expantionPoint) * Settings.Stretching;
         }
 
         public readonly EvaluateableVector ContractInside(EvaluateableVector contractedPoint, EvaluateableVector contractionPoint)
         {
-            return contractionPoint + (contractedPoint - contractionPoint) * _settings.Compression;
+            return contractionPoint + (contractedPoint - contractionPoint) * Settings.Compression;
         }
 
         public readonly EvaluateableVector ContractOutside(EvaluateableVector contractedPoint, EvaluateableVector contractionPoint)
         {
-            return contractionPoint - (contractionPoint - contractedPoint) * _settings.Compression;
+            return contractionPoint - (contractionPoint - contractedPoint) * Settings.Compression;
         }
 
         public readonly void ReplaceWorst(EvaluateableVector newPoint)
         {
-            _vectors[^1] = (EvaluateableVector)newPoint.Clone();
+            Vectors[^1] = (EvaluateableVector)newPoint.Clone();
         }
 
         public readonly void ReduceSimplex()
         {
             var best = (EvaluateableVector)GetBestInSorted.Clone();
-            for (int i = 0; i < _vectors.Length; i++)
+            for (int i = 0; i < Vectors.Length; i++)
             {
-                _vectors[i] = best + (_vectors[i] - best) * _settings.Reduction;
+                Vectors[i] = best + (Vectors[i] - best) * Settings.Reduction;
             }
         }
 
         public readonly EvaluateableVector[] ClonePoints()
         {
-            var points = new EvaluateableVector[_vectors.Length];
-            for (int i = 0; i < _vectors.Length; i++)
+            var points = new EvaluateableVector[Vectors.Length];
+            for (int i = 0; i < Vectors.Length; i++)
             {
-                points[i] = (EvaluateableVector)_vectors[i].Clone();
+                points[i] = (EvaluateableVector)Vectors[i].Clone();
             }
             return points;
+        }
+
+        public readonly object Clone()
+        {
+            var simplex = new Simplex(Settings, InitialConditions);
+            Array.Copy(Vectors, simplex.Vectors, Vectors.Length);
+
+            return simplex;
         }
     }
 }
