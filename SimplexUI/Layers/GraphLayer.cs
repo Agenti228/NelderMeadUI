@@ -105,12 +105,7 @@
         private PointF GetPointAsGraph(float windowX)
         {
             PointF graphPoint = ConvertWindowToGraph(new PointF(windowX, 0));
-            if (Function.TryCalculate(graphPoint.X, out double value))
-            {
-                return new PointF(graphPoint.X, (float)value);
-            }
-
-            return new PointF(graphPoint.X, float.NaN);
+            return new PointF(graphPoint.X, (float)Function.Calculate([graphPoint.X])); // if function is const -> windowX == 0 -> X == [0] -> Calculate() breaks
         }
     }
 }

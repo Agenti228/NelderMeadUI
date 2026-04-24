@@ -56,9 +56,9 @@ namespace SimplexUI
 
         private readonly string _infixExpression;
         private string[] _postfixTokens = []; 
-        private List<string> _variables = [];
+        private readonly List<string> _variables = [];
 
-        public int GetVariablesNumber() => _variables.Count;
+        public int GetVariablesCount => _variables.Count;
 
         public bool IsCorrect { get; private set; }
 
@@ -230,7 +230,7 @@ namespace SimplexUI
         {
             double result = double.NaN; 
 
-            if (!IsCorrect || X.Length < _variables.Count)
+            if (!IsCorrect || X.Length != _variables.Count)
             {
                 return double.NaN;
             }

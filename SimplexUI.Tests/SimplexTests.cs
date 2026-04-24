@@ -2,7 +2,7 @@ namespace SimplexUI.Tests
 {
     public class SimplexTests
     {
-        const double _tolerance = 0.00000001;
+        const double TOLERANCE = 0.00000001;
         static double TestFunction(double[] x) => x[0];
         static double TestSumFunction(double[] x) => x[0] + x[1];
         static double TestPowFunction(double[] x) => Math.Pow(x[0] - 2, 2);
@@ -18,7 +18,7 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var best = simplex.GetBestInSorted;
 
-            Assert.Equal(1, best[0], _tolerance);
+            Assert.Equal(1, best[0], TOLERANCE);
         }
 
         [Fact]
@@ -30,11 +30,11 @@ namespace SimplexUI.Tests
 
             var points = simplex.ClonePoints();
 
-            Assert.Equal(3, points.Length, _tolerance);
-            Assert.Equal(1, points[0][0], _tolerance);
-            Assert.Equal(2, points[0][1], _tolerance);
-            Assert.Equal(3, points[1][0], _tolerance);
-            Assert.Equal(3, points[0].Value, _tolerance);
+            Assert.Equal(3, points.Length, TOLERANCE);
+            Assert.Equal(1, points[0][0], TOLERANCE);
+            Assert.Equal(2, points[0][1], TOLERANCE);
+            Assert.Equal(3, points[1][0], TOLERANCE);
+            Assert.Equal(3, points[0].Value, TOLERANCE);
         }
 
         [Fact]
@@ -47,7 +47,7 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var second = simplex.GetSecondBestInSorted;
 
-            Assert.Equal(5, second[0], _tolerance);
+            Assert.Equal(5, second[0], TOLERANCE);
         }
 
         [Fact]
@@ -60,7 +60,7 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var worst = simplex.GetWorstInSorted;
 
-            Assert.Equal(5, worst[0], _tolerance);
+            Assert.Equal(5, worst[0], TOLERANCE);
         }
 
         [Fact]
@@ -73,9 +73,9 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var center = simplex.GetCenterInSorted;
 
-            Assert.Equal(1, center[0], _tolerance);
-            Assert.Equal(0, center[1], _tolerance);
-            Assert.Equal(1, center.Value, _tolerance);
+            Assert.Equal(1, center[0], TOLERANCE);
+            Assert.Equal(0, center[1], TOLERANCE);
+            Assert.Equal(1, center.Value, TOLERANCE);
         }
 
         [Theory]
@@ -92,7 +92,7 @@ namespace SimplexUI.Tests
             var reflected = simplex.Reflect(worst, center);
 
             double expected = 1 + (1 - 3) * reflectionCoeff; // Ожидаемая формула
-            Assert.Equal(expected, reflected[0], _tolerance);
+            Assert.Equal(expected, reflected[0], TOLERANCE);
             Assert.Equal(worst.Function, reflected.Function); // функция должна быть той же
         }
 
@@ -110,7 +110,7 @@ namespace SimplexUI.Tests
             var expanded = simplex.Expand(expandedPoint, center);
             double expected = 1 + 2 * stretchCoeff;
 
-            Assert.Equal(expected, expanded[0], _tolerance);
+            Assert.Equal(expected, expanded[0], TOLERANCE);
         }
 
         [Fact]
@@ -141,8 +141,8 @@ namespace SimplexUI.Tests
             simplex.ReduceSimplex();
             var points = simplex.ClonePoints();
 
-            Assert.Equal(0, points[0][0], _tolerance); // лучшая не меняется
-            Assert.Equal(0 + (8 - 0) * 0.5, points[1][0], _tolerance); // 4
+            Assert.Equal(0, points[0][0], TOLERANCE); // лучшая не меняется
+            Assert.Equal(0 + (8 - 0) * 0.5, points[1][0], TOLERANCE); // 4
         }
 
         [Fact]
@@ -169,9 +169,9 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var best = simplex.GetBestInSorted;
 
-            Assert.Equal(4.5, best[0], _tolerance);
-            Assert.Equal(-8, best[1], _tolerance);
-            Assert.Equal(-3.5, best.Value, _tolerance);
+            Assert.Equal(4.5, best[0], TOLERANCE);
+            Assert.Equal(-8, best[1], TOLERANCE);
+            Assert.Equal(-3.5, best.Value, TOLERANCE);
         }
 
         [Fact]
@@ -185,9 +185,9 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var best = simplex.GetBestInSorted;
 
-            Assert.Equal(2, best[0], _tolerance);
-            Assert.Equal(0, best[1], _tolerance);
-            Assert.Equal(0, best.Value, _tolerance);
+            Assert.Equal(2, best[0], TOLERANCE);
+            Assert.Equal(0, best[1], TOLERANCE);
+            Assert.Equal(0, best.Value, TOLERANCE);
         }
 
         [Fact]
@@ -201,9 +201,9 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var second = simplex.GetSecondBestInSorted;
 
-            Assert.Equal(1, second[0], _tolerance);
-            Assert.Equal(0, second[1], _tolerance);
-            Assert.Equal(1, second.Value, _tolerance);
+            Assert.Equal(1, second[0], TOLERANCE);
+            Assert.Equal(0, second[1], TOLERANCE);
+            Assert.Equal(1, second.Value, TOLERANCE);
         }
 
         [Fact]
@@ -217,9 +217,9 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var second = simplex.GetSecondBestInSorted;
 
-            Assert.Equal(1.4, second[0], _tolerance);
-            Assert.Equal(0, second[1], _tolerance);
-            Assert.Equal(0.36, second.Value, _tolerance);
+            Assert.Equal(1.4, second[0], TOLERANCE);
+            Assert.Equal(0, second[1], TOLERANCE);
+            Assert.Equal(0.36, second.Value, TOLERANCE);
         }
 
         [Fact]
@@ -233,9 +233,9 @@ namespace SimplexUI.Tests
             simplex.SortVectors();
             var worst = simplex.GetSecondBestInSorted;
 
-            Assert.Equal(1.5, worst[0], _tolerance);
-            Assert.Equal(0, worst[1], _tolerance);
-            Assert.Equal(0.25, worst.Value, _tolerance);
+            Assert.Equal(1.5, worst[0], TOLERANCE);
+            Assert.Equal(0, worst[1], TOLERANCE);
+            Assert.Equal(0.25, worst.Value, TOLERANCE);
         }
 
         [Fact]
@@ -249,9 +249,9 @@ namespace SimplexUI.Tests
             simplex.Iteration();
             var points = simplex.ClonePoints();
 
-            Assert.Equal(2, points[0][0], _tolerance);
-            Assert.Equal(2.6, points[1][0], _tolerance);
-            Assert.Equal(3.5, points[2][0], _tolerance);
+            Assert.Equal(2, points[0][0], TOLERANCE);
+            Assert.Equal(2.6, points[1][0], TOLERANCE);
+            Assert.Equal(3.5, points[2][0], TOLERANCE);
 
             static double Function(double[] x)
             {
@@ -284,9 +284,9 @@ namespace SimplexUI.Tests
             simplex.Iteration();
             var points = simplex.ClonePoints();
 
-            Assert.Equal(2, points[0][0], _tolerance);
-            Assert.Equal(2.5, points[1][0], _tolerance);
-            Assert.Equal(1.25, points[2][0], _tolerance);
+            Assert.Equal(2, points[0][0], TOLERANCE);
+            Assert.Equal(2.5, points[1][0], TOLERANCE);
+            Assert.Equal(1.25, points[2][0], TOLERANCE);
 
             static double Function(double[] x)
             {
