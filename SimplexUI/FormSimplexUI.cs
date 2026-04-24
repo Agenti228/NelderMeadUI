@@ -1,3 +1,4 @@
+using SimplexUI.Exceptions;
 using SimplexUI.Layers;
 using SimplexUI.SimplexIterationStrategies;
 
@@ -60,6 +61,7 @@ namespace SimplexUI
             if (_function.IsCorrect)
             {
                 listBoxIterations.Items.Clear();
+                labelFunctionError.Text = string.Empty;
                 labelFunctionError.Visible = false;
             }
             else
@@ -77,9 +79,11 @@ namespace SimplexUI
                     //pnt.Y = (float)result;
                     //funcPointList.Add(ConvertFunctionToPanel(pnt));
                     listBoxIterations.Items.Clear();
+                    labelFunctionError.Text = string.Empty;
                     labelFunctionError.Visible = false;
+                    return;
                 }
-
+                labelFunctionError.Text = _function.Message;
                 labelFunctionError.Visible = true;
             }
             

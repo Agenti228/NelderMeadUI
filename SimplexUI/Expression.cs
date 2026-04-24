@@ -60,19 +60,31 @@ namespace SimplexUI
         private readonly List<string> _variables = [];
 
         public int GetVariablesCount => _variables.Count;
-
-        public bool IsCorrect { get; private set; }
+        public bool IsCorrect;
+        public string Message;
 
         public Function(string input)
         {
-            IsCorrect = true;
             _infixExpression = input.Replace(" ", "").ToLower();
-            ParseToPostfix();
+
+            try
+            {
+                ParseToPostfix();
+                IsCorrect = true;
+                Message = string.Empty;
+            }
+            catch (Exception ex) when (ex is EmptyExpressionException or UndefinedParseException or InvalidOperatorLocationException or InvalidVariableOrOperatorException or InvalidParenthesisInputException or InvalidDigitInputException)
+            {
+                Message = ex.Message;
+                IsCorrect = false;
+            }
+            catch (Exception ex)
+            {
+                Message = $"Internal error: {ex.Message}";
+                IsCorrect = false;
+            }
         }
 
-        /// <summary>
-        /// Преобразование инфиксного выражения в постфиксную запись (алгоритм сортировочной станции)
-        /// </summary>
         private void ParseToPostfix()
         {
             var output = new StringBuilder();
@@ -81,8 +93,7 @@ namespace SimplexUI
 
             if (_infixExpression.Length == 0)
             {
-                IsCorrect = false;
-                return;
+                throw new EmptyExpressionException("Error: Empty exception");
             }
 
             for (int i = 0; i < _infixExpression.Length; i++)
@@ -107,12 +118,7 @@ namespace SimplexUI
                 }
                 else
                 {
-                    throw new UndefinedParseException();
-                }
-
-                if (!IsCorrect)
-                {
-                    return;
+                    throw new UndefinedParseException("Error: Undefined");
                 }
             }
 
@@ -123,7 +129,10 @@ namespace SimplexUI
 
             string postfixString = output.ToString();
             _postfixTokens = postfixString.Split('?', StringSplitOptions.RemoveEmptyEntries);
-            IsCorrect = parenthesesDepth == 0;
+            if (parenthesesDepth != 0)
+            {
+                throw new InvalidParenthesisInputException("Error: Invalid parenthesis");
+            }
         }
 
         private void HandleDigit(ref int index, ref StringBuilder output)
@@ -136,7 +145,7 @@ namespace SimplexUI
             string digit = _infixExpression[start..index];
             if (!IsNumber(digit, out _) || (index < _infixExpression.Length && _infixExpression[index] != ')' && !IsOperator(_infixExpression[index].ToString())))
             {
-                throw new InvalidDigitInputException();
+                throw new InvalidDigitInputException("Error: Invalid digit");
             }
             _ = output.Append(digit);
             index--;
@@ -146,7 +155,7 @@ namespace SimplexUI
         {
             if (index > 0 && (char.IsDigit(_infixExpression[index - 1]) || _infixExpression[index - 1] == 'x'))
             {
-                throw new InvalidParenthesisInputException();
+                throw new InvalidParenthesisInputException("Error: Invalid parenthesis");
             }
             parenthesesDepth += 10;
             operatorStack.Push(_infixExpression[index].ToString());
@@ -171,13 +180,14 @@ namespace SimplexUI
             string op = ch.ToString();
             if (IsOperator(op))
             {
-                if (index + 1 == _infixExpression.Length || (index > 0 && IsOperator(_infixExpression[index - 1].ToString())))
-                {
-                    throw new InvalidOperatorLocationException();
-                }
                 if (ch == '-' && (index == 0 || _infixExpression[index - 1] == '('))
                 {
                     _ = output.Append('0');
+
+                }
+                else if (index == 0 || index + 1 == _infixExpression.Length || (index > 0 && IsOperator(_infixExpression[index - 1].ToString())))
+                {
+                    throw new InvalidOperatorLocationException("Error: Wrong operator location");
                 }
             }
             else if (IsLetter(ch))
@@ -201,12 +211,12 @@ namespace SimplexUI
                 }
                 else if (!IsOperator(op))
                 {
-                    throw new InvalidVariableOrOperatorException();
+                    throw new InvalidVariableOrOperatorException("Error: Invalid variable or operator");
                 }
             }
             else
             {
-                throw new InvalidVariableOrOperatorException();
+                throw new InvalidVariableOrOperatorException("Error: Invalid variable or operator");
             }
 
             _ = output.Append('?');
