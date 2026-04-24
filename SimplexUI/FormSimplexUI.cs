@@ -73,7 +73,7 @@ namespace SimplexUI
                     pnt.Y = 0;
                     PointF pointF = ConvertPanelToFunction(pnt);
                     pnt = pointF;
-                    double[] multiDimentionalPoint = new double[Math.Max(_function.GetVariablesNumber(), 1)];
+                    double[] multiDimentionalPoint = new double[Math.Max(_function.GetVariablesCount, 1)];
                     Array.Fill(multiDimentionalPoint, 0);
                     multiDimentionalPoint[0] = pnt.X;
                     double result = _function.Calculate(multiDimentionalPoint);
@@ -191,7 +191,7 @@ namespace SimplexUI
         {
             _simplexes.Clear();
 
-            double[] startPoint = new double[Math.Max(_function.GetVariablesNumber(), 1)];
+            double[] startPoint = new double[Math.Max(_function.GetVariablesCount, 1)];
             Array.Fill(startPoint, 10);
             var initialVector = new EvaluateableVector(startPoint, OneDimentionalFunction);
             double edgeLength = 2;
