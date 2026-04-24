@@ -15,7 +15,7 @@ namespace SimplexUI.Tests
             var initialConditions = new InitialConditions([[5], [1]], TestFunction);
             var simplex = new Simplex(settings, initialConditions);
 
-            simplex.SortPoints();
+            simplex.SortVectors();
             var best = simplex.GetBestInSorted;
 
             Assert.Equal(1, best[0], _tolerance);
@@ -44,7 +44,7 @@ namespace SimplexUI.Tests
             var initialConditions = new InitialConditions([[5], [1]], TestFunction);
             var simplex = new Simplex(settings, initialConditions);
 
-            simplex.SortPoints();
+            simplex.SortVectors();
             var second = simplex.GetSecondBestInSorted;
 
             Assert.Equal(5, second[0], _tolerance);
@@ -57,7 +57,7 @@ namespace SimplexUI.Tests
             var initialConditions = new InitialConditions([[5], [1]], TestFunction);
             var simplex = new Simplex(settings, initialConditions);
 
-            simplex.SortPoints();
+            simplex.SortVectors();
             var worst = simplex.GetWorstInSorted;
 
             Assert.Equal(5, worst[0], _tolerance);
@@ -70,7 +70,7 @@ namespace SimplexUI.Tests
             var initialConditions = new InitialConditions([[0, 0], [2, 0], [0, 4]], TestSumFunction);
             var simplex = new Simplex(settings, initialConditions);
 
-            simplex.SortPoints();
+            simplex.SortVectors();
             var center = simplex.GetCenterInSorted;
 
             Assert.Equal(1, center[0], _tolerance);
@@ -136,7 +136,7 @@ namespace SimplexUI.Tests
             var settings = new Settings();
             var initialConditions = new InitialConditions([[0], [8]], TestFunction);
             var simplex = new Simplex(settings, initialConditions);
-            simplex.SortPoints();
+            simplex.SortVectors();
 
             simplex.ReduceSimplex();
             var points = simplex.ClonePoints();
@@ -166,7 +166,7 @@ namespace SimplexUI.Tests
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
-            simplex.SortPoints();
+            simplex.SortVectors();
             var best = simplex.GetBestInSorted;
 
             Assert.Equal(4.5, best[0], _tolerance);
@@ -182,7 +182,7 @@ namespace SimplexUI.Tests
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
-            simplex.SortPoints();
+            simplex.SortVectors();
             var best = simplex.GetBestInSorted;
 
             Assert.Equal(2, best[0], _tolerance);
@@ -198,7 +198,7 @@ namespace SimplexUI.Tests
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
-            simplex.SortPoints();
+            simplex.SortVectors();
             var second = simplex.GetSecondBestInSorted;
 
             Assert.Equal(1, second[0], _tolerance);
@@ -214,7 +214,7 @@ namespace SimplexUI.Tests
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
-            simplex.SortPoints();
+            simplex.SortVectors();
             var second = simplex.GetSecondBestInSorted;
 
             Assert.Equal(1.4, second[0], _tolerance);
@@ -230,7 +230,7 @@ namespace SimplexUI.Tests
             var simplex = new Simplex(settings, initialConditions);
 
             simplex.Iteration();
-            simplex.SortPoints();
+            simplex.SortVectors();
             var worst = simplex.GetSecondBestInSorted;
 
             Assert.Equal(1.5, worst[0], _tolerance);
@@ -244,7 +244,7 @@ namespace SimplexUI.Tests
             var settings = new Settings();
             var initialConditions = new InitialConditions([[2, 0], [3.2, 0], [5, 0]], Function);
             var simplex = new Simplex(settings, initialConditions);
-            simplex.SortPoints();
+            simplex.SortVectors();
 
             simplex.Iteration();
             var points = simplex.ClonePoints();
@@ -279,7 +279,7 @@ namespace SimplexUI.Tests
             var settings = new Settings();
             var initialConditions = new InitialConditions([[2, 0], [3, 0], [0.5, 0]], Function);
             var simplex = new Simplex(settings, initialConditions);
-            simplex.SortPoints();
+            simplex.SortVectors();
 
             simplex.Iteration();
             var points = simplex.ClonePoints();
