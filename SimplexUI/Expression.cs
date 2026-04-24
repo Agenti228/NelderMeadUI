@@ -1,3 +1,4 @@
+using SimplexUI.Exceptions;
 using System.Collections;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -90,23 +91,23 @@ namespace SimplexUI
 
                 if (char.IsDigit(ch))
                 {
-                    IsCorrect = HandleDigit(ref i, ref output);
+                    HandleDigit(ref i, ref output);
                 }
                 else if (ch == '(')
                 {
-                    IsCorrect = HandleOpenParentheses(i, ref operatorStack, ref parenthesesDepth);
+                    HandleOpenParentheses(i, ref operatorStack, ref parenthesesDepth);
                 }
                 else if (ch == ')')
                 {
-                    IsCorrect = HandleCloseParentheses(ref output, ref operatorStack, ref parenthesesDepth);
+                    HandleCloseParentheses(ref output, ref operatorStack, ref parenthesesDepth);
                 }
                 else if (IsLetter(ch) || IsOperator(ch.ToString()))
                 {
-                    IsCorrect = HandleLetters(ref i, ref output, ref operatorStack, parenthesesDepth);
+                    HandleLetters(ref i, ref output, ref operatorStack, parenthesesDepth);
                 }
                 else
                 {
-                    IsCorrect = false;
+                    throw new UndefinedParseException();
                 }
 
                 if (!IsCorrect)
@@ -125,7 +126,7 @@ namespace SimplexUI
             IsCorrect = parenthesesDepth == 0;
         }
 
-        private bool HandleDigit(ref int index, ref StringBuilder output)
+        private void HandleDigit(ref int index, ref StringBuilder output)
         {
             int start = index;
             while (index < _infixExpression.Length && (char.IsDigit(_infixExpression[index]) || _infixExpression[index] == '.'))
@@ -135,25 +136,23 @@ namespace SimplexUI
             string digit = _infixExpression[start..index];
             if (!IsNumber(digit, out _) || (index < _infixExpression.Length && _infixExpression[index] != ')' && !IsOperator(_infixExpression[index].ToString())))
             {
-                return false;
+                throw new InvalidDigitInputException();
             }
             _ = output.Append(digit);
             index--;
-            return true;
         }
 
-        private bool HandleOpenParentheses(int index, ref Stack<string> operatorStack, ref int parenthesesDepth)
+        private void HandleOpenParentheses(int index, ref Stack<string> operatorStack, ref int parenthesesDepth)
         {
             if (index > 0 && (char.IsDigit(_infixExpression[index - 1]) || _infixExpression[index - 1] == 'x'))
             {
-                return false;
+                throw new InvalidParenthesisInputException();
             }
             parenthesesDepth += 10;
             operatorStack.Push(_infixExpression[index].ToString());
-            return true;
         }
 
-        private static bool HandleCloseParentheses(ref StringBuilder output, ref Stack<string> operatorStack, ref int parenthesesDepth)
+        private static void HandleCloseParentheses(ref StringBuilder output, ref Stack<string> operatorStack, ref int parenthesesDepth)
         {
             parenthesesDepth -= 10;
             while (operatorStack.Count > 0 && operatorStack.Peek() != "(")
@@ -164,10 +163,9 @@ namespace SimplexUI
             {
                 _ = operatorStack.Pop();
             }
-            return true;
         }
 
-        private bool HandleLetters(ref int index, ref StringBuilder output, ref Stack<string> operatorStack, int parenthesesDepth)
+        private void HandleLetters(ref int index, ref StringBuilder output, ref Stack<string> operatorStack, int parenthesesDepth)
         {
             char ch = _infixExpression[index];
             string op = ch.ToString();
@@ -175,7 +173,7 @@ namespace SimplexUI
             {
                 if (index + 1 == _infixExpression.Length || (index > 0 && IsOperator(_infixExpression[index - 1].ToString())))
                 {
-                    return false;
+                    throw new InvalidOperatorLocationException();
                 }
                 if (ch == '-' && (index == 0 || _infixExpression[index - 1] == '('))
                 {
@@ -199,16 +197,16 @@ namespace SimplexUI
                     {
                         _variables.Add(op);
                     }
-                    return true;
+                    return;
                 }
                 else if (!IsOperator(op))
                 {
-                    return false;
+                    throw new InvalidVariableOrOperatorException();
                 }
             }
             else
             {
-                return false;
+                throw new InvalidVariableOrOperatorException();
             }
 
             _ = output.Append('?');
@@ -220,7 +218,6 @@ namespace SimplexUI
                 _ = output.Append(operatorStack.Pop()).Append('?');
             }
             operatorStack.Push(op);
-            return true;
         }
 
         /// <summary>
