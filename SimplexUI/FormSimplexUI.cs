@@ -8,25 +8,34 @@ namespace SimplexUI
     {
         private const int MAX_SCALE = 5000000;
         private const int MIN_SCALE = 1;
+        private const double MIN_TOPOGRAPHIC_SCALE = 20.0;
+        private const double MAX_TOPOGRAPHIC_SCALE = 500.0;
 
         private PointF _lastMouseLocation = default;
         private bool _movingScreen = false;
         private Function _function = new(string.Empty);
-        
+
         private readonly Dictionary<LayerNames, Layer> _drawableLayers;
         private readonly ISimplexIterationStrategy _strategy;
+
+        private TopographicCamera _camera;
+        private TopographicRenderer _renderer;
+        private bool isPanning = false;
+        private Point lastMousePosition;
+
+
 
         public FormSimplexUI()
         {
             InitializeComponent();
-
+            this.DoubleBuffered = true;
             _drawableLayers = new Dictionary<LayerNames, Layer>
             {
                 [LayerNames.Axis] = new AxisLayer((Width, Height)),
                 [LayerNames.Graph] = new GraphLayer((Width, Height), _function),
                 [LayerNames.Simplex] = new SimplexLayer((Width, Height), _function),
             };
-
+            ActivatePictureBox();
             _strategy = new MaxIterationsStrategy([10], _function.Calculate);
         }
 
@@ -48,6 +57,24 @@ namespace SimplexUI
             UpdateSimplexes();
 
             panelFunction.Invalidate();
+            
+            if (_function.GetVariablesCount == 2)
+            {
+                ActivatePictureBox();
+                pictureBox.Visible = true;
+                pictureBox.Enabled = true;
+                statusStrip.Visible = true;
+                statusStrip.Enabled = true;
+                pictureBox.Invalidate();
+            }
+            else
+            {
+                pictureBox.Visible = false;
+                pictureBox.Enabled = false;
+                statusStrip.Visible = false;
+                statusStrip.Enabled = false;
+                pictureBox.Invalidate();
+            }
         }
 
         public void UpdateFunction()
@@ -86,7 +113,7 @@ namespace SimplexUI
                 labelFunctionError.Text = _function.Message;
                 labelFunctionError.Visible = true;
             }
-            
+
         }
 
         public void UpdateSimplexes()
@@ -186,6 +213,7 @@ namespace SimplexUI
             }
 
             panelFunction.Invalidate();
+            pictureBox.Invalidate();
         }
 
         private void ButtonResetView_Click(object sender, EventArgs e)
@@ -195,6 +223,85 @@ namespace SimplexUI
 
             Layer.ResetView();
             panelFunction.Invalidate();
+        }
+        #endregion
+
+        #region pictureBox
+        private void ActivatePictureBox()
+        {
+            _camera = new TopographicCamera();
+            _renderer = new TopographicRenderer(_function,_camera,(pictureBox.Width, pictureBox.Height));
+            pictureBox.MouseWheel += pictureBox_MouseWheel;
+        }
+        private void pictureBox_Paint(object sender, PaintEventArgs e)
+        {
+            _renderer.PictureBoxDimentions = (pictureBox.ClientSize.Width, pictureBox.ClientSize.Height);
+            using (Bitmap bmp = _renderer.Render())
+            {
+                if(bmp.Width > 0 && bmp.Height > 0)
+                {
+                    e.Graphics.DrawImage(bmp, 0, 0);
+                }
+            }
+        }
+
+        private void pictureBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            if(e.Button == MouseButtons.Right)
+            {
+                isPanning = true;
+                lastMousePosition = e.Location;
+                pictureBox.Cursor = Cursors.SizeAll;
+            }
+        }
+
+        private void pictureBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            _camera.ScreenToWorld(e.X, e.Y, out double worldX, out double worldY);
+
+            double z = _function.Calculate([worldX, worldY]);
+
+            statusStrip.Text = "x: {worldX:F3}  y: {worldY:F3}  z: {z:F3}";
+
+            if(isPanning)
+            {
+                double delta_x = e.X - lastMousePosition.X;
+                double delta_y = e.Y - lastMousePosition.Y;
+                _camera.OffsetX += delta_x;
+                _camera.OffsetY += delta_y;
+                lastMousePosition = e.Location;
+                pictureBox.Invalidate();
+            }
+        }
+
+        private void pictureBox_MouseUp(object sender, MouseEventArgs e)
+        {
+            if(e.Button == MouseButtons.Right)
+            {
+                isPanning = false;
+                pictureBox.Cursor = Cursors.Default;
+            }
+        }
+
+        private void pictureBox_MouseWheel(object sender, MouseEventArgs e)
+        {
+            double factor = e.Delta > 0 ? 1.1 : 0.9;
+            double newScale = _camera.Scale * factor;
+            newScale = Math.Max(MIN_TOPOGRAPHIC_SCALE, Math.Min(MAX_TOPOGRAPHIC_SCALE, newScale));
+
+            if(Math.Abs(newScale - _camera.Scale) < 0.001)
+            {
+                return;
+            }
+
+            double worldX = (e.X - _camera.OffsetX) / _camera.Scale;
+            double worldY = (_camera.OffsetY - e.Y) / _camera.Scale;
+
+            _camera.Scale = newScale;
+            _camera.OffsetX = e.X - worldX * _camera.Scale;
+            _camera.OffsetY = e.Y - worldY + _camera.Scale;
+
+            pictureBox.Invalidate();
         }
         #endregion
     }
