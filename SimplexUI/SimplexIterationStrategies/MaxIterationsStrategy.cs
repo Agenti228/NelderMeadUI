@@ -1,10 +1,10 @@
 ﻿namespace SimplexUI.SimplexIterationStrategies
 {
-    public class UserIterationStrategy : ISimplexIterationStrategy
+    public class MaxIterationsStrategy : ISimplexIterationStrategy
     {
         private Simplex _simplex;
 
-        public UserIterationStrategy(double[] coordinates, Func<double[], double> function, double edgeLength = 2, int maxIterations = 100)
+        public MaxIterationsStrategy(double[] coordinates, Func<double[], double> function, double edgeLength = 2, int maxIterations = 100)
         {
             var initialVector = new EvaluateableVector(coordinates, function);
             var initialConditions = new InitialConditions(initialVector, edgeLength);

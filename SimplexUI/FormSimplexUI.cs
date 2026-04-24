@@ -26,10 +26,7 @@ namespace SimplexUI
                 [LayerNames.Simplex] = new SimplexLayer((Width, Height), _function),
             };
 
-            _strategy = new UserIterationStrategy([10], point => {
-                _ = _function.TryCalculate(point[0], out double result);
-                return result;
-            });
+            _strategy = new MaxIterationsStrategy([10], _function.Calculate);
         }
 
         private void TextBoxFunction_KeyDown(object sender, KeyEventArgs e)
@@ -69,16 +66,16 @@ namespace SimplexUI
             {
                 if (textBoxFunction.Text == string.Empty)
                 {
-                    pnt.X = i;
-                    pnt.Y = 0;
-                    PointF pointF = ConvertPanelToFunction(pnt);
-                    pnt = pointF;
-                    double[] multiDimentionalPoint = new double[Math.Max(_function.GetVariablesCount, 1)];
-                    Array.Fill(multiDimentionalPoint, 0);
-                    multiDimentionalPoint[0] = pnt.X;
-                    double result = _function.Calculate(multiDimentionalPoint);
-                    pnt.Y = (float)result;
-                    funcPointList.Add(ConvertFunctionToPanel(pnt));
+                    //pnt.X = i;
+                    //pnt.Y = 0;
+                    //PointF pointF = ConvertPanelToFunction(pnt);
+                    //pnt = pointF;
+                    //double[] multiDimentionalPoint = new double[Math.Max(_function.GetVariablesCount, 1)];
+                    //Array.Fill(multiDimentionalPoint, 0);
+                    //multiDimentionalPoint[0] = pnt.X;
+                    //double result = _function.Calculate(multiDimentionalPoint);
+                    //pnt.Y = (float)result;
+                    //funcPointList.Add(ConvertFunctionToPanel(pnt));
                     listBoxIterations.Items.Clear();
                     labelFunctionError.Visible = false;
                 }
@@ -189,40 +186,10 @@ namespace SimplexUI
 
         private void ButtonResetView_Click(object sender, EventArgs e)
         {
-            _simplexes.Clear();
+            //double[] startPoint = new double[Math.Max(_function.GetVariablesNumber(), 1)];
+            //Array.Fill(startPoint, 10);
 
-            double[] startPoint = new double[Math.Max(_function.GetVariablesCount, 1)];
-            Array.Fill(startPoint, 10);
-            var initialVector = new EvaluateableVector(startPoint, OneDimentionalFunction);
-            double edgeLength = 2;
-            var initialConditions = new InitialConditions(initialVector, edgeLength);
-
-            int maxIterations = 100;
-            var settings = new Settings(maxIterations);
-
-            var simplex = new Simplex(settings, initialConditions);
-
-            for (int i = 0; i < settings.MaxIterations; i++)
-            {
-                _simplexes.Add(simplex.ClonePoints());
-                AddBestVectorOnIteration(i); //do something with double sorting
-
-                simplex.Iteration(); //also sorts _points
-
-            }
-
-            void AddBestVectorOnIteration(int iteration)
-            {
-                simplex.SortPoints();
-                _ = listBoxIterations.Items.Add($"Iteration {iteration + 1}: {simplex.GetBestInSorted}");
-            }
-
-            double OneDimentionalFunction(double[] point)
-            {
-                return _function.Calculate(point);
-            }
             Layer.ResetView();
-
             panelFunction.Invalidate();
         }
         #endregion

@@ -57,7 +57,7 @@ namespace SimplexUI
 
         private readonly string _infixExpression;
         private string[] _postfixTokens = []; 
-        private List<string> _variables = [];
+        private readonly List<string> _variables = [];
 
         public int GetVariablesCount => _variables.Count;
 
